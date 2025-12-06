@@ -19,8 +19,13 @@ Novas funcionalidades estão sendo implementadas gradualmente.
 ---
 
 ## 🏗️ Estrutura do Projeto (Maven)
-
-src/main/java/com/creativix/
+MERCADO-VS1
+├──/src/main/resources/
+│            └──img/
+│            │  └──logo.png
+│            │  └──logoinicial.jpeg
+│            └──TABELA_PRODUTOS.sql
+src/main/java/com/creativex/
 ├── db/
 │ └── Conexao.java # Gerenciamento de conexão com o banco
 ├── model/
