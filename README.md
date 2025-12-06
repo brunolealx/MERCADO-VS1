@@ -137,5 +137,5 @@ Conexão centralizada com o banco.
 📌 API REST (Spring Boot)
 📚 Autor
 
-Bruno Leal (creativix)
+Bruno Leal (creativex)
 Projeto educacional e evolutivo para gestão de produtos.
