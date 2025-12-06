@@ -15,7 +15,7 @@ import java.util.List;
  */
 public class ProdutoDAO {
     /**
-     * Retorna o último produto cadastrado (com maior ID).
+     * Retorna o último produto cadastrado (com maior “ID”).
      */
     public Produto buscarUltimo() throws SQLException {
         String sql = "SELECT * FROM TABELA_PRODUTOS ORDER BY id DESC LIMIT 1";
@@ -78,11 +78,11 @@ public class ProdutoDAO {
         }
     }
     /**
-     * Atualiza um produto existente com base no ID.
+     * Atualiza um produto existente com base no "ID".
      *
      * @param p Produto contendo os novos dados.
      */
-    // Atualizar (não atualiza id; WHERE id = ? é o último parâmetro)
+    // Atualizar (não atualiza “id”; WHERE “id” = ? é o último parâmetro)
     public void atualizar(Produto p) throws SQLException {
         String sql = """
         UPDATE TABELA_PRODUTOS SET
@@ -130,7 +130,7 @@ public class ProdutoDAO {
     }
 
     /**
-     * Busca um produto por ID.
+     * Busca um produto por “ID”.
      *
      * @param id Identificador do produto.
      * @return Produto encontrado ou null se inexistente.
