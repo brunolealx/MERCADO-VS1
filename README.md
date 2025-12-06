@@ -57,7 +57,6 @@ src/main/java/com/creativex/
 │      └──LoginForm.java
 └── Main.java # Entrada da aplicação
 
-
 ---
 
 ## 🛢️ Banco de Dados
@@ -140,7 +139,10 @@ Conexão centralizada com o banco.
 📌 Relatórios em PDF
 
 📌 API REST (Spring Boot)
-📚 Autor
 
-Bruno Leal (creativex)
+📚 Autor
+Engenheiro de software: Bruno Leal
 Projeto educacional e evolutivo para gestão de produtos.
+
+🛠️
+Colaboradores: Perácio Dias
