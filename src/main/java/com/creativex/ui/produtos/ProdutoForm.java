@@ -1,0 +1,359 @@
+//Bruno Leal
+//creativex sistemas
+package com.creativex.ui.produtos;
+import com.creativex.ui.MainWindow;
+import com.creativex.ui.HomeScreen;
+import com.creativex.dao.produto.ProdutoDAO;
+import com.creativex.model.produto.Produto;
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import java.awt.*;
+import java.awt.event.*;
+import java.math.BigDecimal;
+import java.sql.SQLException;
+import java.util.List;
+
+/**
+ * Painel do módulo Produtos.
+ * Versão painél (JPanel) do formulário que você forneceu,
+ * pronta para ser embutida em MainWindow.
+ */
+public class ProdutoForm extends JPanel {
+
+    private JTextField txtId, txtCodigoBarra, txtDescricao, txtMarca, txtAtributos, txtUnidadeMedida,
+            txtCategoria, txtCodGrupo, txtGrupo, txtTipoBalanca, txtQuantidadeEstoque,
+            txtPrecoCusto, txtPrecoVenda, txtNcm, txtCest, txtCfopPadrao,
+            txtUnidadeTributavel, txtCeanTributavel, txtCstIcms, txtAliquotaIcms,
+            txtCstPis, txtPpis, txtCstCofins, txtPcofins, txtLoja;
+//atributos da classe
+    private JButton btnSalvar;
+    private JTable table;
+    private DefaultTableModel model;
+    private ProdutoDAO dao;
+
+    public ProdutoForm() {
+        dao = new ProdutoDAO();
+        setLayout(new BorderLayout());
+        setBorder(BorderFactory.createEmptyBorder(12,12,12,12));
+
+        // ABAS
+        JTabbedPane abas = new JTabbedPane();
+        abas.addTab("Dados do Produto", criarPainelDadosProduto());
+        abas.addTab("Dados Fiscais", criarPainelDadosFiscais());
+        add(abas, BorderLayout.NORTH);
+
+        // TABELA
+        model = new DefaultTableModel(new String[]{
+                "ID", "Código Barra", "Descrição", "Categoria", "Qtd", "Preço Venda (R$)"
+        }, 0);
+        table = new JTable(model);
+        add(new JScrollPane(table), BorderLayout.CENTER);
+
+        // BOTOES do Menu Produtos
+        JPanel pnlBotoes = new JPanel();
+        pnlBotoes.setBorder(BorderFactory.createTitledBorder("Opções de produto"));
+        JButton btnNovo = new JButton("Novo");
+        btnSalvar = new JButton("Salvar");
+        JButton btnAtualizar = new JButton("Atualizar");
+        JButton btnListar = new JButton("Listar por Id");
+        JButton btnBuscar = new JButton("Buscar");
+        JButton btnVoltar = new JButton("Voltar");
+        pnlBotoes.add(btnNovo);
+        pnlBotoes.add(btnSalvar);
+        pnlBotoes.add(btnAtualizar);
+        pnlBotoes.add(btnListar);
+        pnlBotoes.add(btnBuscar);
+        pnlBotoes.add(btnVoltar);
+        add(pnlBotoes, BorderLayout.SOUTH);
+
+        // Inicialmente, oculta o botão Salvar
+        btnSalvar.setVisible(false);
+
+        // eventos
+        btnNovo.addActionListener(e -> novoProduto());
+        btnSalvar.addActionListener(e -> salvarProduto());
+        btnAtualizar.addActionListener(e -> atualizarProduto());
+        btnListar.addActionListener(e -> listarPorId());
+        btnBuscar.addActionListener(e -> buscarProduto());
+        btnVoltar.addActionListener(e -> voltarParaHome());
+
+        table.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent e) {
+                int row = table.getSelectedRow();
+                if (row != -1) {
+                    txtId.setText(model.getValueAt(row, 0).toString());
+                    txtCodigoBarra.setText(model.getValueAt(row, 1).toString());
+                    txtDescricao.setText(model.getValueAt(row, 2).toString());
+                    txtCategoria.setText(model.getValueAt(row, 3).toString());
+                    txtQuantidadeEstoque.setText(model.getValueAt(row, 4).toString());
+                    txtPrecoVenda.setText(model.getValueAt(row, 5).toString());
+                }
+            }
+        });
+
+        // carrega último produto ao abrir o módulo
+        produtoFinal();
+    }
+
+    // ---------------- PAINÉIS ----------------
+    private JPanel criarPainelDadosProduto() {
+        JPanel p = new JPanel(new GridLayout(13, 2, 6, 6));
+        p.setBorder(BorderFactory.createTitledBorder("Dados Operacionais"));
+
+        txtId = new JTextField();               adicionarCampo(p, "ID:", txtId);
+        txtCodigoBarra = new JTextField();      adicionarCampo(p, "Código de Barras:", txtCodigoBarra);
+        txtDescricao = new JTextField();        adicionarCampo(p, "Descrição:", txtDescricao);
+        txtMarca = new JTextField();            adicionarCampo(p, "Marca:", txtMarca);
+        txtAtributos = new JTextField();        adicionarCampo(p, "Atributos:", txtAtributos);
+        txtUnidadeMedida = new JTextField();    adicionarCampo(p, "Unidade de Medida:", txtUnidadeMedida);
+        txtCategoria = new JTextField();        adicionarCampo(p, "Categoria:", txtCategoria);
+        txtCodGrupo = new JTextField();         adicionarCampo(p, "Código do Grupo:", txtCodGrupo);
+        txtGrupo = new JTextField();            adicionarCampo(p, "Grupo:", txtGrupo);
+        txtTipoBalanca = new JTextField();      adicionarCampo(p, "Tipo Balança (B/C/N):", txtTipoBalanca);
+        txtQuantidadeEstoque = new JTextField();adicionarCampo(p, "Quantidade Estoque:", txtQuantidadeEstoque);
+        txtPrecoCusto = new JTextField();       adicionarCampo(p, "Preço Custo (R$):", txtPrecoCusto);
+        txtPrecoVenda = new JTextField();       adicionarCampo(p, "Preço Venda (R$):", txtPrecoVenda);
+
+        return p;
+    }
+    //=======================================================
+    private JPanel criarPainelDadosFiscais() {
+        JPanel p = new JPanel(new GridLayout(12, 2, 6, 6));
+        p.setBorder(BorderFactory.createTitledBorder("Dados Fiscais e Tributários"));
+
+        txtNcm = new JTextField();              adicionarCampo(p, "NCM:", txtNcm);
+        txtCest = new JTextField();             adicionarCampo(p, "CEST:", txtCest);
+        txtCfopPadrao = new JTextField();       adicionarCampo(p, "CFOP Padrão:", txtCfopPadrao);
+        txtUnidadeTributavel = new JTextField();adicionarCampo(p, "Unidade Tributável:", txtUnidadeTributavel);
+        txtCeanTributavel = new JTextField();   adicionarCampo(p, "CEAN Tributável:", txtCeanTributavel);
+        txtCstIcms = new JTextField();          adicionarCampo(p, "CST ICMS:", txtCstIcms);
+        txtAliquotaIcms = new JTextField();     adicionarCampo(p, "Alíquota ICMS (%):", txtAliquotaIcms);
+        txtCstPis = new JTextField();           adicionarCampo(p, "CST PIS:", txtCstPis);
+        txtPpis = new JTextField();             adicionarCampo(p, "PIS (%):", txtPpis);
+        txtCstCofins = new JTextField();        adicionarCampo(p, "CST COFINS:", txtCstCofins);
+        txtPcofins = new JTextField();          adicionarCampo(p, "COFINS (%):", txtPcofins);
+        txtLoja = new JTextField();             adicionarCampo(p, "Loja:", txtLoja);
+
+        return p;
+    }
+
+    private void adicionarCampo(JPanel p, String label, JTextField campo) {
+        p.add(new JLabel(label));
+        p.add(campo);
+    }
+
+    // ---------------- OPERACOES ----------------
+
+    /**
+     * método para retornar o controle ao MainWindow.
+     */
+    private MainWindow getMainWindow() {
+        Container parent = getParent();
+        while (parent != null) {
+            if (parent instanceof MainWindow m) {
+                return m;
+            }
+            parent = parent.getParent();
+        }
+        return null;
+    }
+
+    private void voltarParaHome() {
+        MainWindow mw = getMainWindow();
+        if (mw != null) {
+            mw.abrirModulo(new HomeScreen());
+        } else {
+            JOptionPane.showMessageDialog(this,
+                    "Não foi possível voltar. Janela principal não encontrada.");
+        }
+    }
+
+    private void produtoFinal() {
+        try {
+            Produto p = dao.buscarUltimo();
+            if (p != null) preencherCampos(p);
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Erro ao ler último registro: " + ex.getMessage());
+        }
+    }
+    //===========================================================
+
+    /**
+     * Prepara o formulário para inserção de um novo produto.
+     * Limpa todos os campos e exibe o botão Salvar.
+     */
+    private void novoProduto() {
+        limparCampos();
+        btnSalvar.setVisible(true);
+    }
+
+    /**
+     * Salva um novo produto no banco de dados.
+     * Após salvar, oculta o botão Salvar e atualiza a listagem.
+     */
+    private void salvarProduto() {
+        try {
+            Produto p = criarProdutoDeCampos();
+            dao.inserir(p);
+            JOptionPane.showMessageDialog(this, "Produto salvo com sucesso!");
+            btnSalvar.setVisible(false);
+            listarPorId();
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Erro ao salvar: " + e.getMessage());
+        }
+    }
+    //=======================================================
+    private void atualizarProduto() {
+        if (txtId.getText().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Selecione um produto para atualizar!");
+            return;
+        }
+        try {
+            Produto p = criarProdutoDeCampos();
+            p.setId(Long.parseLong(txtId.getText()));
+            dao.atualizar(p);
+            JOptionPane.showMessageDialog(this, "Produto atualizado com sucesso!");
+            listarPorId();
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Erro ao atualizar: " + e.getMessage());
+        }
+    }
+    //=======================================================
+    private void listarPorId() {
+        String entrada = JOptionPane.showInputDialog(this,
+                "Digite o ID inicial para listar (máx. 10 registros):");
+
+        if (entrada == null || entrada.isBlank()) return;
+
+        try {
+            long idInicial = Long.parseLong(entrada);
+
+            model.setRowCount(0);
+
+            List<Produto> produtos = dao.listarPorIdLimite(idInicial, 10);
+
+            for (Produto p : produtos) {
+                model.addRow(new Object[]{
+                        p.getId(),
+                        p.getCodigoBarra(),
+                        p.getDescricao(),
+                        p.getCategoria(),
+                        p.getQuantidadeEstoque(),
+                        p.getPrecoVenda()
+                });
+            }
+
+            if (produtos.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Nenhum produto encontrado para esse ID.");
+            }
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Erro ao listar: " + e.getMessage());
+        }
+    }
+//=======================================================
+    private void buscarProduto() {
+        String entrada = JOptionPane.showInputDialog(this, "Digite o ID ou descrição:");
+        if (entrada == null || entrada.isBlank()) return;
+
+        try {
+            Produto p = entrada.matches("\\d+") ?
+                    dao.buscarPorId(Long.parseLong(entrada)) :
+                    dao.buscarPorNome(entrada);
+
+            if (p != null) {
+                preencherCampos(p);
+                JOptionPane.showMessageDialog(this, "Produto encontrado!");
+            } else {
+                JOptionPane.showMessageDialog(this, "Produto não encontrado.");
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Erro na busca: " + e.getMessage());
+        }
+    }
+    //=======================================================
+    // ---------------- UTILITARIOS ----------------
+    private Produto criarProdutoDeCampos() {
+        Produto p = new Produto();
+        p.setCodigoBarra(txtCodigoBarra.getText());
+        p.setDescricao(txtDescricao.getText());
+        p.setMarca(txtMarca.getText());
+        p.setAtributos(txtAtributos.getText());
+        p.setUnidadeMedida(txtUnidadeMedida.getText());
+        p.setCategoria(txtCategoria.getText());
+        p.setCodGrupo(parseInt(txtCodGrupo.getText()));
+        p.setGrupo(txtGrupo.getText());
+        p.setTipoBalanca(getChar(txtTipoBalanca.getText()));
+        p.setQuantidadeEstoque(parseBig(txtQuantidadeEstoque.getText()));
+        p.setPrecoCusto(parseBig(txtPrecoCusto.getText()));
+        p.setPrecoVenda(parseBig(txtPrecoVenda.getText()));
+        p.setNcm(txtNcm.getText());
+        p.setCest(txtCest.getText());
+        p.setCfopPadrao(txtCfopPadrao.getText());
+        p.setUnidadeTributavel(txtUnidadeTributavel.getText());
+        p.setCeanTributavel(txtCeanTributavel.getText());
+        p.setCstIcms(txtCstIcms.getText());
+        p.setAliquotaIcms(parseBig(txtAliquotaIcms.getText()));
+        p.setCstPis(txtCstPis.getText());
+        p.setPpis(parseBig(txtPpis.getText()));
+        p.setCstCofins(txtCstCofins.getText());
+        p.setPcofins(parseBig(txtPcofins.getText()));
+        p.setLoja(txtLoja.getText());
+        return p;
+    }
+
+    private void preencherCampos(Produto p) {
+        txtId.setText(String.valueOf(p.getId()));
+        txtCodigoBarra.setText(p.getCodigoBarra());
+        txtDescricao.setText(p.getDescricao());
+        txtMarca.setText(p.getMarca());
+        txtAtributos.setText(p.getAtributos());
+        txtUnidadeMedida.setText(p.getUnidadeMedida());
+        txtCategoria.setText(p.getCategoria());
+        txtCodGrupo.setText(String.valueOf(p.getCodGrupo()));
+        txtGrupo.setText(p.getGrupo());
+        txtTipoBalanca.setText(String.valueOf(p.getTipoBalanca()));
+        txtQuantidadeEstoque.setText(String.valueOf(p.getQuantidadeEstoque()));
+        txtPrecoCusto.setText(String.valueOf(p.getPrecoCusto()));
+        txtPrecoVenda.setText(String.valueOf(p.getPrecoVenda()));
+        txtNcm.setText(p.getNcm());
+        txtCest.setText(p.getCest());
+        txtCfopPadrao.setText(p.getCfopPadrao());
+        txtUnidadeTributavel.setText(p.getUnidadeTributavel());
+        txtCeanTributavel.setText(p.getCeanTributavel());
+        txtCstIcms.setText(p.getCstIcms());
+        txtAliquotaIcms.setText(String.valueOf(p.getAliquotaIcms()));
+        txtCstPis.setText(p.getCstPis());
+        txtPpis.setText(String.valueOf(p.getPpis()));
+        txtCstCofins.setText(p.getCstCofins());
+        txtPcofins.setText(String.valueOf(p.getPcofins()));
+        txtLoja.setText(p.getLoja());
+    }
+
+    private void limparCampos() {
+        for (Component c : this.getComponents()) {
+            // Limpa recursivamente: se for container, itera filhos
+            limparComponenteRecursivo(c);
+        }
+    }
+
+    private void limparComponenteRecursivo(Component c) {
+        if (c instanceof JTextField) ((JTextField) c).setText("");
+        else if (c instanceof Container) {
+            for (Component child : ((Container) c).getComponents()) limparComponenteRecursivo(child);
+        }
+    }
+
+    private BigDecimal parseBig(String s) {
+        try { return new BigDecimal(s.trim()); } catch (Exception e) { return BigDecimal.ZERO; }
+    }
+
+    private int parseInt(String s) {
+        try { return Integer.parseInt(s.trim()); } catch (Exception e) { return 0; }
+    }
+
+    private char getChar(String s) {
+        return (s != null && !s.isBlank()) ? s.trim().charAt(0) : 'N';
+    }
+}
+

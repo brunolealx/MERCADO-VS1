@@ -1,0 +1,148 @@
+//Bruno Leal
+//creativex sistemas
+package com.creativex.ui;
+
+import com.creativex.ui.HomeScreen;
+import com.creativex.ui.produtos.ProdutoForm;
+import com.creativex.ui.estoque.EstoqueForm;
+import com.creativex.ui.clientes.ClientesForm;
+import com.creativex.ui.fornecedores.FornecedoresForm;
+import com.creativex.ui.caixas.CaixaForm;
+import com.creativex.ui.ajuda.AjudaForm;
+import com.creativex.ui.listagens.ListagensForm;
+
+import javax.swing.*;
+import java.awt.*;
+
+/**
+ * Janela principal do sistema.
+ * - Área central para carregar módulos (JPanel)
+ * - Menu inferior com botões
+ */
+public class MainWindow extends JFrame {
+
+    private final JPanel painelConteudo;
+    private final JPanel bottomMenu;
+
+    public MainWindow() {
+        setTitle("📌 MERCADO-VS1 — Sistema de Gestão");
+        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        setSize(1300, 800);
+        setLocationRelativeTo(null);
+        setLayout(new BorderLayout());
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
+
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosing(java.awt.event.WindowEvent windowEvent) {
+                int response = JOptionPane.showConfirmDialog(MainWindow.this,
+                        "Deseja sair do Sistema?", "Confirmação",
+                        JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+                if (response == JOptionPane.YES_OPTION) {
+                    System.exit(0);
+                }
+            }
+        });
+
+        // Painel central onde os módulos serão carregados
+        painelConteudo = new JPanel(new BorderLayout());
+        add(painelConteudo, BorderLayout.CENTER);
+
+        // Menu inferior
+        bottomMenu = criarBottomMenu();
+        add(bottomMenu, BorderLayout.SOUTH);
+        
+        //abrir HomeScreen com o Logo de fundo
+        abrirModulo(new HomeScreen());
+  
+  
+        // Carregar tela inicial (home / produtos / dashboard)
+        abrirModulo(new ProdutoForm());
+    }
+
+    /**
+     * Cria o menu inferior com os botões principais (exibidos em 1 ou 2 linhas conforme espaço).
+     */
+    private JPanel criarBottomMenu() {
+        JPanel menu = new JPanel();
+        menu.setBorder(BorderFactory.createTitledBorder("Menu principal"));
+        menu.setLayout(new FlowLayout(FlowLayout.LEFT, 12, 10));
+        menu.setPreferredSize(new Dimension(0, 92));
+
+        JButton btnProdutos     = criarBotaoMenu("Produtos");
+        JButton btnEstoque      = criarBotaoMenu("Estoque");
+        JButton btnClientes     = criarBotaoMenu("Clientes");
+        JButton btnFornecedores = criarBotaoMenu("Fornecedores");
+        JButton btnCaixas       = criarBotaoMenu("Caixas");
+        JButton btnImpressoras  = criarBotaoMenu("Impressoras");
+        JButton btnListagens    = criarBotaoMenu("Listagens");
+        JButton btnAjuda        = criarBotaoMenu("Ajuda");
+        JButton btnSair         = criarBotaoMenu("Sair do sistema");
+
+        menu.add(btnProdutos);
+        menu.add(btnEstoque);
+        menu.add(btnClientes);
+        menu.add(btnFornecedores);
+        menu.add(btnCaixas);
+        menu.add(btnImpressoras);
+        menu.add(btnListagens);
+        menu.add(btnAjuda);
+        menu.add(btnSair);
+
+        // Ações
+        btnProdutos.addActionListener(e -> abrirModulo(new ProdutoForm()));
+        btnEstoque.addActionListener(e -> abrirModulo(new EstoqueForm()));
+        btnClientes.addActionListener(e -> abrirModulo(new ClientesForm()));
+        btnFornecedores.addActionListener(e -> abrirModulo(new FornecedoresForm()));
+        btnCaixas.addActionListener(e -> abrirModulo(new CaixaForm()));
+        btnImpressoras.addActionListener(e ->
+                JOptionPane.showMessageDialog(this, "Módulo Impressoras em desenvolvimento"));
+        btnListagens.addActionListener(e -> abrirModulo(new ListagensForm()));
+        btnAjuda.addActionListener(e -> abrirModulo(new AjudaForm()));
+        btnSair.addActionListener(e -> confirmarSaida());
+
+        return menu;
+    }
+
+    /**
+     * Cria botões com aparência uniforme para o menu.
+     */
+    private JButton criarBotaoMenu(String texto) {
+        JButton b = new JButton(texto);
+        b.setFocusPainted(false);
+        b.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        b.setHorizontalAlignment(SwingConstants.CENTER);
+        b.setPreferredSize(new Dimension(140, 36));
+        return b;
+    }
+
+    /**
+     * Permite que outros painéis (ex.: ListagensForm) peçam que o MainWindow troque o módulo.
+     * Tornado público para integração prática.
+     *
+     * @param painel JPanel do módulo a ser exibido
+     */
+    public void abrirModulo(JPanel painel) {
+        painelConteudo.removeAll();
+        painelConteudo.add(painel, BorderLayout.CENTER);
+        painelConteudo.revalidate();
+        painelConteudo.repaint();
+    }
+
+    /**
+     * Confirmação de saída - chamado pelo botão Sair.
+     */
+    public void confirmarSaida() {
+        int resposta = JOptionPane.showConfirmDialog(
+                this,
+                "Deseja realmente sair do sistema?",
+                "Confirmação",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE
+        );
+
+        if (resposta == JOptionPane.YES_OPTION) {
+            System.exit(0);
+        }
+    }
+}

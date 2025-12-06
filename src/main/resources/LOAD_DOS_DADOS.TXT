@@ -1,0 +1,3 @@
+LOAD DATA INFILE  '/var/lib/mysql-files/TABELA_ESTOQUE.csv' INTO TABLE TABELA_PRODUTOS FIELDS TERMINATED BY ',' ENCLOSED BY '"' LINES TERMINATED BY '\n' IGNORE 1 ROWS (codigo_barra,     descricao,     marca,     atributos,     unidade_medida,     categoria,     cod_grupo,     grupo,     tipo_balanca,     quantidade_estoque,
+    preco_custo,     preco_venda,     ncm,     cest,     cfop_padrao,     unidade_tributavel,     cean_tributavel,     cst_icms,     aliquota_icms,     cst_pis,     ppis,     cst_cofins,     pcofins,     data_cadastro,
+ loja );
