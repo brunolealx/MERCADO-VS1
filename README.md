@@ -2,7 +2,8 @@
 Sistema de Gestão de Produtos — Java + Swing + MySQL
 
 O **MERCADO-VS1** é uma aplicação desktop desenvolvida em **Java (Swing)** para gerenciamento de produtos de mercado.  
-O sistema permite **cadastrar, listar, atualizar e excluir produtos**, mantendo os dados em um banco **MySQL**.
+O sistema inicial permite **cadastrar, listar, atualizar produtos**, mantendo os dados em um banco **MySQL**.
+Novas funcionalidades estão sendo implementadas gradualmente.
 
 ---
 
@@ -10,7 +11,6 @@ O sistema permite **cadastrar, listar, atualizar e excluir produtos**, mantendo 
 
 - ✔️ Cadastro de produto  
 - ✔️ Atualização de dados  
-- ✔️ Exclusão de produtos  
 - ✔️ Pesquisa na tabela  
 - ✔️ Interface moderna em Swing  
 - ✔️ Arquitetura organizada (MVC simplificado)  
@@ -24,11 +24,32 @@ src/main/java/com/creativix/
 ├── db/
 │ └── Conexao.java # Gerenciamento de conexão com o banco
 ├── model/
-│ └── Produto.java # Classe de domínio
+│    └── produto/
+│        └── Produto.java # Classe de domínio
 ├── dao/
-│ └── ProdutoDAO.java # CRUD completo
+│     └──produto/
+│     │  └── ProdutoDAO.java # CRUD completo
+│     └──usuario/
+│        └── UsuarioDAO.java
 ├── ui/
-│ └── ProdutoForm.java # Interface gráfica (Swing)
+│   └──produtos/     # Interface gráfica (Swing)
+│   │    └── ProdutoForm.java
+│   └──ajuda/
+│   │   └── AjudaForm.java
+│   └──caixas/
+│   │   └──CaixasForm.java
+│   └──clientes/
+│   │   └──ClientesForm.java
+│   └──estoque/
+│   │   └──EstoqueForm.java
+│   └──fornecedores/
+│   │   └──FornecedoresForm.java
+│   └──impressoras/
+│   │   └──ImpressorasForm.java
+│   └──listagens/
+│   │   └──listagensForm.java
+│   └──login/
+│      └──LoginForm.java
 └── Main.java # Entrada da aplicação
 
 
