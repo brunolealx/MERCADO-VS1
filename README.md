@@ -1,8 +1,10 @@
 # MERCADO-VS1 🛒  
 Sistema de Gestão de Produtos — Java + Swing + MySQL
 
-O **MERCADO-VS1** é uma aplicação desktop desenvolvida em **Java (Swing)** para gerenciamento de produtos de mercado.  
-O sistema inicial permite **cadastrar, listar, atualizar produtos**, mantendo os dados em um banco **MySQL**.
+O **MERCADO-VS1** é uma aplicação desktop desenvolvida em **Java (Swing)**
+ para gerenciamento de produtos de mercado.  
+O sistema inicial permite **cadastrar, listar, atualizar produtos**, 
+mantendo os dados em um banco **MySQL**.
 Novas funcionalidades estão sendo implementadas gradualmente.
 
 ---
@@ -71,7 +73,7 @@ src/main/java/com/creativex/
 `Usar arquivo Mysql /MERCADO-VS1/src/main/resources/TABELA_PRODUTOS	sql`
 
 ### 📌 conexão com jdbc:
-private static final String URL  = "jdbc:mysql://localhost:3306/mercado";
+private static final String URL  = "jdbc:mysql://localhost:3306/BCO_DADOS_ESTOQUE";
 private static final String USER = "root";
 private static final String PASS = "root";
 
@@ -85,7 +87,7 @@ cd MERCADO-VS1
 mvn clean install
 
 4. Execute:
-mvn exec:java -Dexec.mainClass="com.creativix.Main"
+mvn exec:java -Dexec.mainClass="com.creativex.Main"
 
 ou se preferir
 

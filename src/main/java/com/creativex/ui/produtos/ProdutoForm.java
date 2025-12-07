@@ -177,31 +177,73 @@ public class ProdutoForm extends JPanel {
         }
     }
     //===========================================================
-
     /**
      * Prepara o formulário para inserção de um novo produto.
      * Limpa todos os campos e exibe o botão Salvar.
      */
     private void novoProduto() {
-        limparCampos();
-        btnSalvar.setVisible(true);
+        limparCampos();                // já existe no seu código
+        btnSalvar.setVisible(true);    // exibe botão salvar
+        btnSalvar.setEnabled(true);    // garante habilitação
+        // garante que não estaremos em modo de atualização
+        txtId.setText("");
+        // posiciona o cursor no campo de código de barras
+        txtCodigoBarra.requestFocus();
     }
 
     /**
-     * Salva um novo produto no banco de dados.
-     * Após salvar, oculta o botão Salvar e atualiza a listagem.
+     * Salva um novo produto no banco de dados ou atualiza se houver ID.
+     * Faz validações mínimas para evitar inserção de registros vazios.
      */
     private void salvarProduto() {
         try {
+            // validação mínima: descrição e preço de venda obrigatórios
+            if (txtDescricao.getText() == null || txtDescricao.getText().trim().isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Descrição é obrigatória!");
+                txtDescricao.requestFocus();
+                return;
+            }
+            BigDecimal precoVenda = parseBig(txtPrecoVenda.getText());
+            if (precoVenda == null || precoVenda.compareTo(BigDecimal.ZERO) <= 0) {
+                JOptionPane.showMessageDialog(this, "Preço de venda deve ser maior que zero!");
+                txtPrecoVenda.requestFocus();
+                return;
+            }
+
             Produto p = criarProdutoDeCampos();
-            dao.inserir(p);
-            JOptionPane.showMessageDialog(this, "Produto salvo com sucesso!");
-            btnSalvar.setVisible(false);
-            listarPorId();
+
+            // se txtId vazio -> inserir; caso contrário -> atualizar
+            if (txtId.getText() == null || txtId.getText().trim().isEmpty()) {
+                dao.inserir(p);
+                JOptionPane.showMessageDialog(this, "Produto salvo com sucesso!");
+                btnSalvar.setVisible(false);
+                // carrega o último produto cadastrado no formulário (sem pedir input)
+                produtoFinal();
+                // opcional: adiciona linha na tabela diretamente
+                adicionarLinhaTabela(p);
+            } else {
+                p.setId(Long.parseLong(txtId.getText()));
+                dao.atualizar(p);
+                JOptionPane.showMessageDialog(this, "Produto atualizado com sucesso!");
+                preencherCampos(p);
+                atualizarLinhaTabela(p);
+            }
+
+            // limpa campos de edição depois do fluxo
+            limparCampos();
+
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Erro ao salvar/atualizar (SQL): " + e.getMessage());
+            e.printStackTrace();
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "Erro de formato numérico: " + e.getMessage());
+            e.printStackTrace();
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Erro ao salvar: " + e.getMessage());
+            e.printStackTrace();
         }
     }
+
     //=======================================================
     private void atualizarProduto() {
         if (txtId.getText().isEmpty()) {
@@ -329,7 +371,43 @@ public class ProdutoForm extends JPanel {
         txtPcofins.setText(String.valueOf(p.getPcofins()));
         txtLoja.setText(p.getLoja());
     }
+//==================================================================
+// adiciona nova linha na tabela com os dados recentes (usa buscarUltimo() para obter ID gerado)
+private void adicionarLinhaTabela(Produto p) {
+    try {
+        // reobtem o produto salvo para pegar o ID gerado pelo banco
+        Produto salvo = dao.buscarUltimo();
+        if (salvo != null) {
+            model.addRow(new Object[]{
+                    salvo.getId(),
+                    salvo.getCodigoBarra(),
+                    salvo.getDescricao(),
+                    salvo.getCategoria(),
+                    salvo.getQuantidadeEstoque(),
+                    salvo.getPrecoVenda()
+            });
+        }
+    } catch (SQLException e) {
+        // não é crítico; apenas loga
+        e.printStackTrace();
+    }
+}
 
+    // atualiza linha selecionada na tabela (caso queira refletir edição imediata)
+    private void atualizarLinhaTabela(Produto p) {
+        int row = table.getSelectedRow();
+        if (row >= 0) {
+            model.setValueAt(p.getId(), row, 0);
+            model.setValueAt(p.getCodigoBarra(), row, 1);
+            model.setValueAt(p.getDescricao(), row, 2);
+            model.setValueAt(p.getCategoria(), row, 3);
+            model.setValueAt(p.getQuantidadeEstoque(), row, 4);
+            model.setValueAt(p.getPrecoVenda(), row, 5);
+        } else {
+            // se nenhuma linha selecionada, apenas recarrega a tabela (opcional)
+        }
+    }
+   //==================================================================
     private void limparCampos() {
         for (Component c : this.getComponents()) {
             // Limpa recursivamente: se for container, itera filhos
