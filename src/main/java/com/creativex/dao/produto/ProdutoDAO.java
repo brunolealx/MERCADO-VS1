@@ -1,6 +1,7 @@
 //Bruno Leal
 //creativex sistemas
 
+
 package com.creativex.dao.produto;
 import com.creativex.db.Conexao;
 import com.creativex.model.produto.Produto;
