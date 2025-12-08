@@ -1,10 +1,12 @@
 //Bruno Leal
 //creativex sistemas
 package com.creativex.ui.produtos;
+
 import com.creativex.ui.MainWindow;
 import com.creativex.ui.HomeScreen;
 import com.creativex.dao.produto.ProdutoDAO;
 import com.creativex.model.produto.Produto;
+
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
@@ -15,87 +17,92 @@ import java.util.List;
 
 /**
  * Painel do módulo Produtos.
- * Versão painél (JPanel) do formulário que você forneceu,
- * pronta para ser embutida em MainWindow.
+ * Versão painel (JPanel) do formulário pronto para ser embutido em MainWindow.
+ * Refatorado: métodos menores, validações centralizadas e UI separada.
  */
 public class ProdutoForm extends JPanel {
 
+    // Campos de UI
     private JTextField txtId, txtCodigoBarra, txtDescricao, txtMarca, txtAtributos, txtUnidadeMedida,
             txtCategoria, txtCodGrupo, txtGrupo, txtTipoBalanca, txtQuantidadeEstoque,
             txtPrecoCusto, txtPrecoVenda, txtNcm, txtCest, txtCfopPadrao,
             txtUnidadeTributavel, txtCeanTributavel, txtCstIcms, txtAliquotaIcms,
             txtCstPis, txtPpis, txtCstCofins, txtPcofins, txtLoja;
-//atributos da classe
+
+    // Botões e tabela
     private JButton btnSalvar;
+    private JButton btnNovo;
+    private JButton btnAtualizar;
+    private JButton btnListar;
+    private JButton btnBuscar;
+    private JButton btnVoltar;
+
     private JTable table;
     private DefaultTableModel model;
-    private ProdutoDAO dao;
+
+    // DAO
+    private final ProdutoDAO dao;
 
     public ProdutoForm() {
         dao = new ProdutoDAO();
         setLayout(new BorderLayout());
-        setBorder(BorderFactory.createEmptyBorder(12,12,12,12));
+        setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
 
-        // ABAS
+        initComponents();
+        bindEvents();
+
+        // Carrega último produto ao abrir (se existir)
+        produtoFinal();
+    }
+
+    // ----------------- Inicialização de componentes -----------------
+    private void initComponents() {
+        // Abas
         JTabbedPane abas = new JTabbedPane();
         abas.addTab("Dados do Produto", criarPainelDadosProduto());
         abas.addTab("Dados Fiscais", criarPainelDadosFiscais());
         add(abas, BorderLayout.NORTH);
 
-        // TABELA
+        // Tabela
         model = new DefaultTableModel(new String[]{
                 "ID", "Código Barra", "Descrição", "Categoria", "Qtd", "Preço Venda (R$)"
-        }, 0);
+        }, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false; // proteger edição direta na tabela
+            }
+        };
         table = new JTable(model);
         add(new JScrollPane(table), BorderLayout.CENTER);
 
-        // BOTOES do Menu Produtos
+        // Painel de botões
         JPanel pnlBotoes = new JPanel();
         pnlBotoes.setBorder(BorderFactory.createTitledBorder("Opções de produto"));
-        JButton btnNovo = new JButton("Novo");
+
+        btnNovo = new JButton("Novo");
         btnSalvar = new JButton("Salvar");
-        JButton btnAtualizar = new JButton("Atualizar");
-        JButton btnListar = new JButton("Listar por Id");
-        JButton btnBuscar = new JButton("Buscar");
-        JButton btnVoltar = new JButton("Voltar");
+        btnAtualizar = new JButton("Atualizar");
+        btnListar = new JButton("Listar por Id");
+        btnBuscar = new JButton("Buscar");
+        btnVoltar = new JButton("Voltar");
+
+        pnlBotoes.setLayout(new FlowLayout(FlowLayout.LEFT, 8, 8));
         pnlBotoes.add(btnNovo);
         pnlBotoes.add(btnSalvar);
         pnlBotoes.add(btnAtualizar);
         pnlBotoes.add(btnListar);
         pnlBotoes.add(btnBuscar);
         pnlBotoes.add(btnVoltar);
+
         add(pnlBotoes, BorderLayout.SOUTH);
 
-        // Inicialmente, oculta o botão Salvar
+        // Estado inicial
         btnSalvar.setVisible(false);
-
-        // eventos
-        btnNovo.addActionListener(e -> novoProduto());
-        btnSalvar.addActionListener(e -> salvarProduto());
-        btnAtualizar.addActionListener(e -> atualizarProduto());
-        btnListar.addActionListener(e -> listarPorId());
-        btnBuscar.addActionListener(e -> buscarProduto());
-        btnVoltar.addActionListener(e -> voltarParaHome());
-
-        table.addMouseListener(new MouseAdapter() {
-            public void mouseClicked(MouseEvent e) {
-                int row = table.getSelectedRow();
-                if (row != -1) {
-                    txtId.setText(model.getValueAt(row, 0).toString());
-                    txtCodigoBarra.setText(model.getValueAt(row, 1).toString());
-                    txtDescricao.setText(model.getValueAt(row, 2).toString());
-                    txtCategoria.setText(model.getValueAt(row, 3).toString());
-                    txtQuantidadeEstoque.setText(model.getValueAt(row, 4).toString());
-                    txtPrecoVenda.setText(model.getValueAt(row, 5).toString());
-                }
-            }
-        });
-
-        // carrega último produto ao abrir o módulo
-        produtoFinal();
+        btnSalvar.setEnabled(false);
+        btnAtualizar.setEnabled(false);
     }
 
-    // ---------------- PAINÉIS ----------------
+    // ----------------- Criação de painéis -----------------
     private JPanel criarPainelDadosProduto() {
         JPanel p = new JPanel(new GridLayout(13, 2, 6, 6));
         p.setBorder(BorderFactory.createTitledBorder("Dados Operacionais"));
@@ -116,7 +123,7 @@ public class ProdutoForm extends JPanel {
 
         return p;
     }
-    //=======================================================
+
     private JPanel criarPainelDadosFiscais() {
         JPanel p = new JPanel(new GridLayout(12, 2, 6, 6));
         p.setBorder(BorderFactory.createTitledBorder("Dados Fiscais e Tributários"));
@@ -142,17 +149,31 @@ public class ProdutoForm extends JPanel {
         p.add(campo);
     }
 
-    // ---------------- OPERACOES ----------------
+    // ----------------- Eventos -----------------
+    private void bindEvents() {
+        btnNovo.addActionListener(e -> modoNovo());
+        btnSalvar.addActionListener(e -> salvarProduto());
+        btnAtualizar.addActionListener(e -> atualizarProduto());
+        btnListar.addActionListener(e -> listarPorId());
+        btnBuscar.addActionListener(e -> buscarProduto());
+        btnVoltar.addActionListener(e -> voltarParaHome());
 
-    /**
-     * método para retornar o controle ao MainWindow.
-     */
+        table.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent e) {
+                int row = table.getSelectedRow();
+                if (row != -1) {
+                    carregarProdutoDaTabela(row);
+                    modoEdicao();
+                }
+            }
+        });
+    }
+
+    // ----------------- Operações de UI -----------------
     private MainWindow getMainWindow() {
         Container parent = getParent();
         while (parent != null) {
-            if (parent instanceof MainWindow m) {
-                return m;
-            }
+            if (parent instanceof MainWindow m) return m;
             parent = parent.getParent();
         }
         return null;
@@ -160,53 +181,58 @@ public class ProdutoForm extends JPanel {
 
     private void voltarParaHome() {
         MainWindow mw = getMainWindow();
-        if (mw != null) {
-            mw.abrirModulo(new HomeScreen());
-        } else {
-            JOptionPane.showMessageDialog(this,
-                    "Não foi possível voltar. Janela principal não encontrada.");
-        }
+        if (mw != null) mw.abrirModulo(new HomeScreen());
+        else JOptionPane.showMessageDialog(this, "Não foi possível voltar. Janela principal não encontrada.");
     }
 
     private void produtoFinal() {
         try {
             Produto p = dao.buscarUltimo();
-            if (p != null) preencherCampos(p);
+            if (p != null) {
+                preencherCampos(p);
+                // opcional: exibir na tabela
+                model.setRowCount(0);
+                model.addRow(new Object[]{
+                        p.getId(),
+                        p.getCodigoBarra(),
+                        p.getDescricao(),
+                        p.getCategoria(),
+                        p.getQuantidadeEstoque(),
+                        p.getPrecoVenda()
+                });
+            }
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "Erro ao ler último registro: " + ex.getMessage());
         }
     }
-//===========================================================
-    /**
-     * Prepara o formulário para inserção de um novo produto.
-     * Limpa todos os campos e exibe o botão Salvar.
-     */
-    private void novoProduto() {
+
+    // ----------------- Modos/UX -----------------
+    private void modoNovo() {
         limparCampos();
-        txtId.setText("");     // força modo "inserir"
+        txtId.setText("");
         btnSalvar.setVisible(true);
         btnSalvar.setEnabled(true);
+        btnAtualizar.setEnabled(false);
         txtCodigoBarra.requestFocus();
     }
-//=============================================================
 
-    /**
-     * Salva um novo produto no banco de dados ou atualiza se houver ID.
-     * Faz validações mínimas para evitar inserção de registros vazios.
-     */
+    private void modoEdicao() {
+        btnSalvar.setVisible(false);
+        btnSalvar.setEnabled(false);
+        btnAtualizar.setEnabled(true);
+    }
+
+    // ----------------- Ações dos botões -----------------
     private void salvarProduto() {
 
-        // 1. Valida campos obrigatórios
-        if (!validarCamposObrigatorios()) {
-            return; // impede salvar se algo estiver errado
-        }
+        // validação
+        if (!validarCamposObrigatorios()) return;
 
         try {
             Produto p = criarProdutoDeCampos();
 
-            // 2. Inserção (ID vazio)
-            if (txtId.getText() == null || txtId.getText().trim().isEmpty()) {
-
+            // inserir
+            if (isEmpty(txtId.getText())) {
                 dao.inserir(p);
 
                 JOptionPane.showMessageDialog(this,
@@ -215,20 +241,16 @@ public class ProdutoForm extends JPanel {
                         JOptionPane.INFORMATION_MESSAGE
                 );
 
-                // recarrega último
+                // atualiza UI
                 produtoFinal();
-
-                // adiciona linha na tabela
                 adicionarLinhaTabela(p);
-
-                // esconder botão salvar
                 btnSalvar.setVisible(false);
-            }
+                btnSalvar.setEnabled(false);
+                btnAtualizar.setEnabled(true);
 
-            // 3. Atualização (ID presente)
-            else {
+            } else {
+                // segurança: se houver id preenchido, tratamos como update
                 p.setId(Long.parseLong(txtId.getText()));
-
                 dao.atualizar(p);
 
                 JOptionPane.showMessageDialog(this,
@@ -240,19 +262,17 @@ public class ProdutoForm extends JPanel {
                 preencherCampos(p);
                 atualizarLinhaTabela(p);
             }
-
         } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Erro SQL ao salvar: " + e.getMessage());
+            JOptionPane.showMessageDialog(this, "Erro SQL ao salvar: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Erro ao salvar: " + e.getMessage());
+            JOptionPane.showMessageDialog(this, "Erro ao salvar: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
         }
     }
 
-    //=======================================================
     private void atualizarProduto() {
-        if (txtId.getText().isEmpty()) {
+        if (isEmpty(txtId.getText())) {
             JOptionPane.showMessageDialog(this, "Selecione um produto para atualizar!");
             return;
         }
@@ -261,12 +281,12 @@ public class ProdutoForm extends JPanel {
             p.setId(Long.parseLong(txtId.getText()));
             dao.atualizar(p);
             JOptionPane.showMessageDialog(this, "Produto atualizado com sucesso!");
-            listarPorId();
+            atualizarLinhaTabela(p);
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Erro ao atualizar: " + e.getMessage());
         }
     }
-    //=======================================================
+
     private void listarPorId() {
         String entrada = JOptionPane.showInputDialog(this,
                 "Digite o ID inicial para listar (máx. 10 registros):");
@@ -275,11 +295,45 @@ public class ProdutoForm extends JPanel {
 
         try {
             long idInicial = Long.parseLong(entrada);
+            carregarTabelaPorId(idInicial, 10);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Erro ao listar: " + e.getMessage());
+        }
+    }
 
+    private void buscarProduto() {
+        String entrada = JOptionPane.showInputDialog(this, "Digite o ID ou descrição:");
+        if (entrada == null || entrada.isBlank()) return;
+
+        try {
+            Produto p = entrada.matches("\\d+") ? dao.buscarPorId(Long.parseLong(entrada)) : dao.buscarPorNome(entrada);
+            if (p != null) {
+                preencherCampos(p);
+                JOptionPane.showMessageDialog(this, "Produto encontrado!");
+                // Atualiza seleção na tabela (opcional)
+                model.setRowCount(0);
+                model.addRow(new Object[]{
+                        p.getId(),
+                        p.getCodigoBarra(),
+                        p.getDescricao(),
+                        p.getCategoria(),
+                        p.getQuantidadeEstoque(),
+                        p.getPrecoVenda()
+                });
+                modoEdicao();
+            } else {
+                JOptionPane.showMessageDialog(this, "Produto não encontrado.");
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Erro na busca: " + e.getMessage());
+        }
+    }
+
+    // ----------------- Utilitários para tabela -----------------
+    private void carregarTabelaPorId(long idInicial, int limite) {
+        try {
+            List<Produto> produtos = dao.listarPorIdLimite(idInicial, limite);
             model.setRowCount(0);
-
-            List<Produto> produtos = dao.listarPorIdLimite(idInicial, 10);
-
             for (Produto p : produtos) {
                 model.addRow(new Object[]{
                         p.getId(),
@@ -290,38 +344,59 @@ public class ProdutoForm extends JPanel {
                         p.getPrecoVenda()
                 });
             }
-
             if (produtos.isEmpty()) {
                 JOptionPane.showMessageDialog(this, "Nenhum produto encontrado para esse ID.");
             }
-
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Erro ao listar: " + e.getMessage());
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Erro ao carregar tabela: " + e.getMessage());
         }
     }
-//=======================================================
-    private void buscarProduto() {
-        String entrada = JOptionPane.showInputDialog(this, "Digite o ID ou descrição:");
-        if (entrada == null || entrada.isBlank()) return;
 
+    // adiciona nova linha na tabela com os dados recentes (usa buscarUltimo para pegar id)
+    private void adicionarLinhaTabela(Produto p) {
         try {
-            Produto p = entrada.matches("\\d+") ?
-                    dao.buscarPorId(Long.parseLong(entrada)) :
-                    dao.buscarPorNome(entrada);
-
-            if (p != null) {
-                preencherCampos(p);
-                JOptionPane.showMessageDialog(this, "Produto encontrado!");
-            } else {
-                JOptionPane.showMessageDialog(this, "Produto não encontrado.");
+            Produto salvo = dao.buscarUltimo();
+            if (salvo != null) {
+                model.addRow(new Object[]{
+                        salvo.getId(),
+                        salvo.getCodigoBarra(),
+                        salvo.getDescricao(),
+                        salvo.getCategoria(),
+                        salvo.getQuantidadeEstoque(),
+                        salvo.getPrecoVenda()
+                });
             }
         } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Erro na busca: " + e.getMessage());
+            e.printStackTrace();
         }
     }
-    //==============================================
-    // ---------------- UTILITARIOS ----------------
-    //==============================================
+
+    // atualiza linha selecionada na tabela (caso queira refletir edição imediata)
+    private void atualizarLinhaTabela(Produto p) {
+        int row = table.getSelectedRow();
+        if (row >= 0) {
+            model.setValueAt(p.getId(), row, 0);
+            model.setValueAt(p.getCodigoBarra(), row, 1);
+            model.setValueAt(p.getDescricao(), row, 2);
+            model.setValueAt(p.getCategoria(), row, 3);
+            model.setValueAt(p.getQuantidadeEstoque(), row, 4);
+            model.setValueAt(p.getPrecoVenda(), row, 5);
+        } else {
+            // se nenhuma linha selecionada, atualizar a tabela inteira pode ser feito aqui
+        }
+    }
+
+    // carrega produto da linha selecionada para os campos do form
+    private void carregarProdutoDaTabela(int row) {
+        txtId.setText(String.valueOf(model.getValueAt(row, 0)));
+        txtCodigoBarra.setText(String.valueOf(model.getValueAt(row, 1)));
+        txtDescricao.setText(String.valueOf(model.getValueAt(row, 2)));
+        txtCategoria.setText(String.valueOf(model.getValueAt(row, 3)));
+        txtQuantidadeEstoque.setText(String.valueOf(model.getValueAt(row, 4)));
+        txtPrecoVenda.setText(String.valueOf(model.getValueAt(row, 5)));
+    }
+
+    // ----------------- Criação / preenchimento do model -----------------
     private Produto criarProdutoDeCampos() {
         Produto p = new Produto();
         p.setCodigoBarra(txtCodigoBarra.getText());
@@ -378,57 +453,53 @@ public class ProdutoForm extends JPanel {
         txtPcofins.setText(String.valueOf(p.getPcofins()));
         txtLoja.setText(p.getLoja());
     }
-//==================================================================
-// adiciona nova linha na tabela com os dados recentes
-// (usa buscarUltimo() para obter ID gerado)
-private void adicionarLinhaTabela(Produto p) {
-    try {
-        // reobtem o produto salvo para pegar o ID gerado pelo banco
-        Produto salvo = dao.buscarUltimo();
-        if (salvo != null) {
-            model.addRow(new Object[]{
-                    salvo.getId(),
-                    salvo.getCodigoBarra(),
-                    salvo.getDescricao(),
-                    salvo.getCategoria(),
-                    salvo.getQuantidadeEstoque(),
-                    salvo.getPrecoVenda()
-            });
-        }
-    } catch (SQLException e) {
-        // não é crítico; apenas loga
-        e.printStackTrace();
-    }
-}
 
-    // atualiza linha selecionada na tabela
-    // (caso queira refletir edição imediata)
-    private void atualizarLinhaTabela(Produto p) {
-        int row = table.getSelectedRow();
-        if (row >= 0) {
-            model.setValueAt(p.getId(), row, 0);
-            model.setValueAt(p.getCodigoBarra(), row, 1);
-            model.setValueAt(p.getDescricao(), row, 2);
-            model.setValueAt(p.getCategoria(), row, 3);
-            model.setValueAt(p.getQuantidadeEstoque(), row, 4);
-            model.setValueAt(p.getPrecoVenda(), row, 5);
-        } else {
-// se nenhuma linha selecionada, apenas recarrega a tabela (opcional)
+    // ----------------- Utilitários -----------------
+    private void limparCampos() {
+        for (Component c : this.getComponents()) limparComponenteRecursivo(c);
+    }
+
+    private void limparComponenteRecursivo(Component c) {
+        if (c instanceof JTextField) ((JTextField) c).setText("");
+        else if (c instanceof Container) {
+            for (Component child : ((Container) c).getComponents()) limparComponenteRecursivo(child);
         }
     }
-    //=====EVITAR CAMPOS VAZIOS==============================================
+
     private boolean isEmpty(String value) {
         return value == null || value.trim().isEmpty();
     }
 
     private BigDecimal toBig(String value) {
+        if (value == null) return BigDecimal.ZERO;
         try {
-            return new BigDecimal(value.replace(",", "."));
+            return new BigDecimal(value.replace(",", ".").trim());
         } catch (Exception e) {
             return BigDecimal.ZERO;
         }
     }
-    //===========VALIDAR CAMPOS==============================================
+
+    private BigDecimal parseBig(String s) {
+        try {
+            return new BigDecimal(s.trim());
+        } catch (Exception e) {
+            return BigDecimal.ZERO;
+        }
+    }
+
+    private int parseInt(String s) {
+        try {
+            return Integer.parseInt(s.trim());
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
+    private char getChar(String s) {
+        return (s != null && !s.isBlank()) ? s.trim().charAt(0) : 'N';
+    }
+
+    // Validação centralizada dos campos obrigatórios
     private boolean validarCamposObrigatorios() {
 
         if (isEmpty(txtDescricao.getText())) {
@@ -453,7 +524,6 @@ private void adicionarLinhaTabela(Produto p) {
 
         BigDecimal preco = toBig(txtPrecoVenda.getText());
         if (preco == null || preco.compareTo(BigDecimal.ZERO) <= 0) {
-
             JOptionPane.showMessageDialog(this,
                     "O PREÇO DE VENDA deve ser maior que zero.",
                     "Atenção",
@@ -465,33 +535,4 @@ private void adicionarLinhaTabela(Produto p) {
 
         return true;
     }
-
-//==================================================================
-
-    private void limparCampos() {
-        for (Component c : this.getComponents()) {
-            // Limpa recursivamente: se for container, itera filhos
-            limparComponenteRecursivo(c);
-        }
-    }
-
-    private void limparComponenteRecursivo(Component c) {
-        if (c instanceof JTextField) ((JTextField) c).setText("");
-        else if (c instanceof Container) {
-            for (Component child : ((Container) c).getComponents()) limparComponenteRecursivo(child);
-        }
-    }
-
-    private BigDecimal parseBig(String s) {
-        try { return new BigDecimal(s.trim()); } catch (Exception e) { return BigDecimal.ZERO; }
-    }
-
-    private int parseInt(String s) {
-        try { return Integer.parseInt(s.trim()); } catch (Exception e) { return 0; }
-    }
-
-    private char getChar(String s) {
-        return (s != null && !s.isBlank()) ? s.trim().charAt(0) : 'N';
-    }
 }
-
