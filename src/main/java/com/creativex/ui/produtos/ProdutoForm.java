@@ -176,67 +176,73 @@ public class ProdutoForm extends JPanel {
             JOptionPane.showMessageDialog(this, "Erro ao ler último registro: " + ex.getMessage());
         }
     }
-    //===========================================================
+//===========================================================
     /**
      * Prepara o formulário para inserção de um novo produto.
      * Limpa todos os campos e exibe o botão Salvar.
      */
     private void novoProduto() {
-        limparCampos();                // já existe no seu código
-        btnSalvar.setVisible(true);    // exibe botão salvar
-        btnSalvar.setEnabled(true);    // garante habilitação
-        // garante que não estaremos em modo de atualização
-        txtId.setText("");
-        // posiciona o cursor no campo de código de barras
+        limparCampos();
+        txtId.setText("");     // força modo "inserir"
+        btnSalvar.setVisible(true);
+        btnSalvar.setEnabled(true);
         txtCodigoBarra.requestFocus();
     }
+//=============================================================
 
     /**
      * Salva um novo produto no banco de dados ou atualiza se houver ID.
      * Faz validações mínimas para evitar inserção de registros vazios.
      */
     private void salvarProduto() {
-        try {
-            // validação mínima: descrição e preço de venda obrigatórios
-            if (txtDescricao.getText() == null || txtDescricao.getText().trim().isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Descrição é obrigatória!");
-                txtDescricao.requestFocus();
-                return;
-            }
-            BigDecimal precoVenda = parseBig(txtPrecoVenda.getText());
-            if (precoVenda == null || precoVenda.compareTo(BigDecimal.ZERO) <= 0) {
-                JOptionPane.showMessageDialog(this, "Preço de venda deve ser maior que zero!");
-                txtPrecoVenda.requestFocus();
-                return;
-            }
 
+        // 1. Valida campos obrigatórios
+        if (!validarCamposObrigatorios()) {
+            return; // impede salvar se algo estiver errado
+        }
+
+        try {
             Produto p = criarProdutoDeCampos();
 
-            // se txtId vazio -> inserir; caso contrário -> atualizar
+            // 2. Inserção (ID vazio)
             if (txtId.getText() == null || txtId.getText().trim().isEmpty()) {
+
                 dao.inserir(p);
-                JOptionPane.showMessageDialog(this, "Produto salvo com sucesso!");
-                btnSalvar.setVisible(false);
-                // carrega o último produto cadastrado no formulário (sem pedir input)
+
+                JOptionPane.showMessageDialog(this,
+                        "Produto cadastrado com sucesso!",
+                        "Sucesso",
+                        JOptionPane.INFORMATION_MESSAGE
+                );
+
+                // recarrega último
                 produtoFinal();
-                // opcional: adiciona linha na tabela diretamente
+
+                // adiciona linha na tabela
                 adicionarLinhaTabela(p);
-            } else {
+
+                // esconder botão salvar
+                btnSalvar.setVisible(false);
+            }
+
+            // 3. Atualização (ID presente)
+            else {
                 p.setId(Long.parseLong(txtId.getText()));
+
                 dao.atualizar(p);
-                JOptionPane.showMessageDialog(this, "Produto atualizado com sucesso!");
+
+                JOptionPane.showMessageDialog(this,
+                        "Produto atualizado com sucesso!",
+                        "Sucesso",
+                        JOptionPane.INFORMATION_MESSAGE
+                );
+
                 preencherCampos(p);
                 atualizarLinhaTabela(p);
             }
 
-            // limpa campos de edição depois do fluxo
-            limparCampos();
-
         } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Erro ao salvar/atualizar (SQL): " + e.getMessage());
-            e.printStackTrace();
-        } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(this, "Erro de formato numérico: " + e.getMessage());
+            JOptionPane.showMessageDialog(this, "Erro SQL ao salvar: " + e.getMessage());
             e.printStackTrace();
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Erro ao salvar: " + e.getMessage());
@@ -313,8 +319,9 @@ public class ProdutoForm extends JPanel {
             JOptionPane.showMessageDialog(this, "Erro na busca: " + e.getMessage());
         }
     }
-    //=======================================================
+    //==============================================
     // ---------------- UTILITARIOS ----------------
+    //==============================================
     private Produto criarProdutoDeCampos() {
         Produto p = new Produto();
         p.setCodigoBarra(txtCodigoBarra.getText());
@@ -372,7 +379,8 @@ public class ProdutoForm extends JPanel {
         txtLoja.setText(p.getLoja());
     }
 //==================================================================
-// adiciona nova linha na tabela com os dados recentes (usa buscarUltimo() para obter ID gerado)
+// adiciona nova linha na tabela com os dados recentes
+// (usa buscarUltimo() para obter ID gerado)
 private void adicionarLinhaTabela(Produto p) {
     try {
         // reobtem o produto salvo para pegar o ID gerado pelo banco
@@ -393,7 +401,8 @@ private void adicionarLinhaTabela(Produto p) {
     }
 }
 
-    // atualiza linha selecionada na tabela (caso queira refletir edição imediata)
+    // atualiza linha selecionada na tabela
+    // (caso queira refletir edição imediata)
     private void atualizarLinhaTabela(Produto p) {
         int row = table.getSelectedRow();
         if (row >= 0) {
@@ -404,10 +413,61 @@ private void adicionarLinhaTabela(Produto p) {
             model.setValueAt(p.getQuantidadeEstoque(), row, 4);
             model.setValueAt(p.getPrecoVenda(), row, 5);
         } else {
-            // se nenhuma linha selecionada, apenas recarrega a tabela (opcional)
+// se nenhuma linha selecionada, apenas recarrega a tabela (opcional)
         }
     }
-   //==================================================================
+    //=====EVITAR CAMPOS VAZIOS==============================================
+    private boolean isEmpty(String value) {
+        return value == null || value.trim().isEmpty();
+    }
+
+    private BigDecimal toBig(String value) {
+        try {
+            return new BigDecimal(value.replace(",", "."));
+        } catch (Exception e) {
+            return BigDecimal.ZERO;
+        }
+    }
+    //===========VALIDAR CAMPOS==============================================
+    private boolean validarCamposObrigatorios() {
+
+        if (isEmpty(txtDescricao.getText())) {
+            JOptionPane.showMessageDialog(this,
+                    "O campo DESCRIÇÃO é obrigatório.",
+                    "Atenção",
+                    JOptionPane.WARNING_MESSAGE
+            );
+            txtDescricao.requestFocus();
+            return false;
+        }
+
+        if (isEmpty(txtCategoria.getText())) {
+            JOptionPane.showMessageDialog(this,
+                    "O campo CATEGORIA é obrigatório.",
+                    "Atenção",
+                    JOptionPane.WARNING_MESSAGE
+            );
+            txtCategoria.requestFocus();
+            return false;
+        }
+
+        BigDecimal preco = toBig(txtPrecoVenda.getText());
+        if (preco == null || preco.compareTo(BigDecimal.ZERO) <= 0) {
+
+            JOptionPane.showMessageDialog(this,
+                    "O PREÇO DE VENDA deve ser maior que zero.",
+                    "Atenção",
+                    JOptionPane.WARNING_MESSAGE
+            );
+            txtPrecoVenda.requestFocus();
+            return false;
+        }
+
+        return true;
+    }
+
+//==================================================================
+
     private void limparCampos() {
         for (Component c : this.getComponents()) {
             // Limpa recursivamente: se for container, itera filhos
