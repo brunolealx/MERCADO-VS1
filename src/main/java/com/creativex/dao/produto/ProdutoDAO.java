@@ -171,6 +171,21 @@ public class ProdutoDAO {
         return null;
     }
 
+//==========================================
+    /**
+     * Exclui um produto pelo ID.
+     */
+    public void excluir(long id) throws SQLException {
+        String sql = "DELETE FROM TABELA_PRODUTOS WHERE id = ?";
+
+        try (Connection conn = Conexao.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setLong(1, id);
+            stmt.executeUpdate();
+        }
+    }
+
     // ==============================
     // LISTAR por ID , 10 LINHAS
     // ==============================

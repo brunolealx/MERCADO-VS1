@@ -2,7 +2,7 @@
 //creativex sistemas
 package com.creativex;
 import com.creativex.ui.MainWindow;
-//----
+//------------------------------
 //* implementar no futuro
 //import com.creativex.ui.login.LoginForm;
 

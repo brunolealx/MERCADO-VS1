@@ -33,6 +33,9 @@ public class ProdutoForm extends JPanel {
     private JButton btnSalvar;
     private JButton btnNovo;
     private JButton btnAtualizar;
+    private JButton btnCancelar;
+    private JButton btnExcluir;
+
     private JButton btnListar;
     private JButton btnBuscar;
     private JButton btnVoltar;
@@ -82,14 +85,21 @@ public class ProdutoForm extends JPanel {
         btnNovo = new JButton("Novo");
         btnSalvar = new JButton("Salvar");
         btnAtualizar = new JButton("Atualizar");
+        btnExcluir = new JButton("Excluir");
+
         btnListar = new JButton("Listar por Id");
         btnBuscar = new JButton("Buscar");
         btnVoltar = new JButton("Voltar");
+        btnCancelar = new JButton("Cancelar");
 
+        pnlBotoes.add(btnExcluir);
+        pnlBotoes.add(btnCancelar);
         pnlBotoes.setLayout(new FlowLayout(FlowLayout.LEFT, 8, 8));
         pnlBotoes.add(btnNovo);
         pnlBotoes.add(btnSalvar);
         pnlBotoes.add(btnAtualizar);
+
+
         pnlBotoes.add(btnListar);
         pnlBotoes.add(btnBuscar);
         pnlBotoes.add(btnVoltar);
@@ -100,6 +110,10 @@ public class ProdutoForm extends JPanel {
         btnSalvar.setVisible(false);
         btnSalvar.setEnabled(false);
         btnAtualizar.setEnabled(false);
+        btnCancelar.setEnabled(false);
+        btnExcluir.setEnabled(false);
+
+
     }
 
     // ----------------- Criação de painéis -----------------
@@ -154,6 +168,10 @@ public class ProdutoForm extends JPanel {
         btnNovo.addActionListener(e -> modoNovo());
         btnSalvar.addActionListener(e -> salvarProduto());
         btnAtualizar.addActionListener(e -> atualizarProduto());
+        btnCancelar.addActionListener(e -> cancelarEdicao());
+        btnExcluir.addActionListener(e -> excluirProduto());
+
+
         btnListar.addActionListener(e -> listarPorId());
         btnBuscar.addActionListener(e -> buscarProduto());
         btnVoltar.addActionListener(e -> voltarParaHome());
@@ -210,82 +228,189 @@ public class ProdutoForm extends JPanel {
     private void modoNovo() {
         limparCampos();
         txtId.setText("");
+
         btnSalvar.setVisible(true);
         btnSalvar.setEnabled(true);
         btnAtualizar.setEnabled(false);
+        btnCancelar.setEnabled(true);
+        btnExcluir.setEnabled(false);
+
+        // Para evitar update acidental na tabela
+        table.clearSelection();
+
         txtCodigoBarra.requestFocus();
     }
 
+//===============================================
     private void modoEdicao() {
         btnSalvar.setVisible(false);
         btnSalvar.setEnabled(false);
         btnAtualizar.setEnabled(true);
+        btnCancelar.setEnabled(true);
+        btnExcluir.setEnabled(true);
+
+
+    }
+
+    private void cancelarEdicao() {
+
+        int opc = JOptionPane.showConfirmDialog(
+                this,
+                "Cancelar a operação atual?",
+                "Confirmação",
+                JOptionPane.YES_NO_OPTION
+        );
+
+        if (opc != JOptionPane.YES_OPTION) return;
+
+        limparCampos();
+        produtoFinal();
+
+        btnSalvar.setVisible(false);
+        btnSalvar.setEnabled(false);
+        btnAtualizar.setEnabled(false);
+        btnCancelar.setEnabled(false);
+        btnExcluir.setEnabled(false);
+
     }
 
     // ----------------- Ações dos botões -----------------
     private void salvarProduto() {
 
-        // validação
+        // não permitir salvar sem estar em modo novo
+        if (!btnSalvar.isVisible() || !isEmpty(txtId.getText()) ) {
+            JOptionPane.showMessageDialog(this,
+                    "Para salvar um novo produto, clique no botão NOVO.",
+                    "Aviso",
+                    JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        // validação centralizada
         if (!validarCamposObrigatorios()) return;
 
         try {
             Produto p = criarProdutoDeCampos();
 
-            // inserir
-            if (isEmpty(txtId.getText())) {
-                dao.inserir(p);
+            int opc = JOptionPane.showConfirmDialog(
+                    this,
+                    "Confirmar cadastro do novo produto?",
+                    "Confirmação",
+                    JOptionPane.YES_NO_OPTION
+            );
 
-                JOptionPane.showMessageDialog(this,
-                        "Produto cadastrado com sucesso!",
-                        "Sucesso",
-                        JOptionPane.INFORMATION_MESSAGE
-                );
+            if (opc != JOptionPane.YES_OPTION) return;
 
-                // atualiza UI
-                produtoFinal();
-                adicionarLinhaTabela(p);
-                btnSalvar.setVisible(false);
-                btnSalvar.setEnabled(false);
-                btnAtualizar.setEnabled(true);
+            dao.inserir(p);
 
-            } else {
-                // segurança: se houver id preenchido, tratamos como update
-                p.setId(Long.parseLong(txtId.getText()));
-                dao.atualizar(p);
+            JOptionPane.showMessageDialog(this,
+                    "Produto cadastrado com sucesso!",
+                    "Sucesso",
+                    JOptionPane.INFORMATION_MESSAGE);
 
-                JOptionPane.showMessageDialog(this,
-                        "Produto atualizado com sucesso!",
-                        "Sucesso",
-                        JOptionPane.INFORMATION_MESSAGE
-                );
+            // Atualiza tela e tabela com o último registro gravado
+            produtoFinal();
+            adicionarLinhaTabela(p);
 
-                preencherCampos(p);
-                atualizarLinhaTabela(p);
-            }
+            // Sai do modo novo
+            btnSalvar.setVisible(false);
+            btnSalvar.setEnabled(false);
+            btnAtualizar.setEnabled(true);
+
         } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Erro SQL ao salvar: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Erro SQL ao salvar: " + e.getMessage());
             e.printStackTrace();
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Erro ao salvar: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Erro ao salvar: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+//========================================================
+private void atualizarProduto() {
+    if (isEmpty(txtId.getText())) {
+        JOptionPane.showMessageDialog(this, "Nenhum produto carregado para atualizar.");
+        return;
     }
 
-    private void atualizarProduto() {
-        if (isEmpty(txtId.getText())) {
-            JOptionPane.showMessageDialog(this, "Selecione um produto para atualizar!");
-            return;
-        }
-        try {
-            Produto p = criarProdutoDeCampos();
-            p.setId(Long.parseLong(txtId.getText()));
-            dao.atualizar(p);
-            JOptionPane.showMessageDialog(this, "Produto atualizado com sucesso!");
-            atualizarLinhaTabela(p);
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Erro ao atualizar: " + e.getMessage());
-        }
+    try {
+        Produto p = criarProdutoDeCampos();
+        p.setId(Long.parseLong(txtId.getText()));
+
+        int opc = JOptionPane.showConfirmDialog(
+                this,
+                "Confirmar atualização deste produto?",
+                "Confirmação",
+                JOptionPane.YES_NO_OPTION
+        );
+
+        if (opc != JOptionPane.YES_OPTION) return;
+
+        dao.atualizar(p);
+
+        JOptionPane.showMessageDialog(this, "Produto atualizado com sucesso!");
+
+        atualizarLinhaTabela(p);
+
+    } catch (Exception e) {
+        JOptionPane.showMessageDialog(this, "Erro ao atualizar: " + e.getMessage());
     }
+}
+//=================================================
+private void excluirProduto() {
+
+    if (isEmpty(txtId.getText())) {
+        JOptionPane.showMessageDialog(this,
+                "Selecione um produto para excluir.",
+                "Atenção",
+                JOptionPane.WARNING_MESSAGE
+        );
+        return;
+    }
+
+    int opc = JOptionPane.showConfirmDialog(
+            this,
+            "Confirma a exclusão deste produto?",
+            "Excluir Produto",
+            JOptionPane.YES_NO_OPTION,
+            JOptionPane.WARNING_MESSAGE
+    );
+
+    if (opc != JOptionPane.YES_OPTION) return;
+
+    try {
+        long id = Long.parseLong(txtId.getText());
+        dao.excluir(id);
+
+        JOptionPane.showMessageDialog(this,
+                "Produto excluído com sucesso.",
+                "Sucesso",
+                JOptionPane.INFORMATION_MESSAGE
+        );
+
+        limparCampos();
+        model.setRowCount(0);
+        produtoFinal();
+
+        btnAtualizar.setEnabled(false);
+        btnExcluir.setEnabled(false);
+        btnCancelar.setEnabled(false);
+
+    } catch (SQLException e) {
+        JOptionPane.showMessageDialog(this,
+                "Erro SQL ao excluir: " + e.getMessage(),
+                "Erro",
+                JOptionPane.ERROR_MESSAGE
+        );
+    } catch (Exception e) {
+        JOptionPane.showMessageDialog(this,
+                "Erro ao excluir: " + e.getMessage(),
+                "Erro",
+                JOptionPane.ERROR_MESSAGE
+        );
+    }
+}
+
+//=================================================
 
     private void listarPorId() {
         String entrada = JOptionPane.showInputDialog(this,
@@ -388,12 +513,21 @@ public class ProdutoForm extends JPanel {
 
     // carrega produto da linha selecionada para os campos do form
     private void carregarProdutoDaTabela(int row) {
-        txtId.setText(String.valueOf(model.getValueAt(row, 0)));
-        txtCodigoBarra.setText(String.valueOf(model.getValueAt(row, 1)));
-        txtDescricao.setText(String.valueOf(model.getValueAt(row, 2)));
-        txtCategoria.setText(String.valueOf(model.getValueAt(row, 3)));
-        txtQuantidadeEstoque.setText(String.valueOf(model.getValueAt(row, 4)));
-        txtPrecoVenda.setText(String.valueOf(model.getValueAt(row, 5)));
+        try {
+            long id = Long.parseLong(model.getValueAt(row, 0).toString());
+            Produto p = dao.buscarPorId(id);
+            if (isEmpty(txtDescricao.getText()) && isEmpty(txtPrecoVenda.getText())) {
+                JOptionPane.showMessageDialog(this,
+                        "Produto não pode ser salvo com informações vazias.",
+                        "Atenção",
+                        JOptionPane.WARNING_MESSAGE
+                );
+                return;
+            }
+
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Erro ao carregar produto: " + ex.getMessage());
+        }
     }
 
     // ----------------- Criação / preenchimento do model -----------------
