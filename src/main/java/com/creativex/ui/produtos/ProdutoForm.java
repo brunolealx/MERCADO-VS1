@@ -38,6 +38,8 @@ public class ProdutoForm extends JPanel {
 
     private JButton btnListar;
     private JButton btnBuscar;
+    private JButton btnBuscarCodigoBarra;
+
     private JButton btnVoltar;
 
     private JTable table;
@@ -89,6 +91,7 @@ public class ProdutoForm extends JPanel {
 
         btnListar = new JButton("Listar por Id");
         btnBuscar = new JButton("Buscar");
+        btnBuscarCodigoBarra = new JButton("Buscar por Código de Barras");
         btnVoltar = new JButton("Voltar");
         btnCancelar = new JButton("Cancelar");
 
@@ -102,6 +105,7 @@ public class ProdutoForm extends JPanel {
 
         pnlBotoes.add(btnListar);
         pnlBotoes.add(btnBuscar);
+        pnlBotoes.add(btnBuscarCodigoBarra);
         pnlBotoes.add(btnVoltar);
 
         add(pnlBotoes, BorderLayout.SOUTH);
@@ -174,6 +178,7 @@ public class ProdutoForm extends JPanel {
 
         btnListar.addActionListener(e -> listarPorId());
         btnBuscar.addActionListener(e -> buscarProduto());
+        btnBuscarCodigoBarra.addActionListener(e -> buscarPorCodigoBarra());
         btnVoltar.addActionListener(e -> voltarParaHome());
 
         table.addMouseListener(new MouseAdapter() {
@@ -425,6 +430,67 @@ private void excluirProduto() {
             JOptionPane.showMessageDialog(this, "Erro ao listar: " + e.getMessage());
         }
     }
+//=========================================================
+private void buscarPorCodigoBarra() {
+
+    JTextField campo = new JTextField(20);
+    campo.requestFocusInWindow();
+
+    int opc = JOptionPane.showConfirmDialog(
+            this,
+            campo,
+            "Informe ou leia o Código de Barras",
+            JOptionPane.OK_CANCEL_OPTION,
+            JOptionPane.QUESTION_MESSAGE
+    );
+
+    if (opc != JOptionPane.OK_OPTION) return;
+
+    String codigoBarra = campo.getText().trim();
+    if (codigoBarra.isEmpty()) return;
+
+    executarBuscaCodigoBarra(codigoBarra);
+}
+
+//==cria janela para leitor de barras ou digitação ===
+    private void executarBuscaCodigoBarra(String codigoBarra) {
+
+        try {
+            Produto produto = dao.buscarPorCodigoBarra(codigoBarra);
+
+            if (produto == null) {
+                JOptionPane.showMessageDialog(this,
+                        "Produto não encontrado.",
+                        "Resultado",
+                        JOptionPane.INFORMATION_MESSAGE
+                );
+                return;
+            }
+
+            preencherCampos(produto);
+
+            model.setRowCount(0);
+            model.addRow(new Object[]{
+                    produto.getId(),
+                    produto.getCodigoBarra(),
+                    produto.getDescricao(),
+                    produto.getCategoria(),
+                    produto.getQuantidadeEstoque(),
+                    produto.getPrecoVenda()
+            });
+
+            modoEdicao();
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this,
+                    "Erro ao buscar por código de barras: " + e.getMessage(),
+                    "Erro",
+                    JOptionPane.ERROR_MESSAGE
+            );
+        }
+    }
+
+//=========================================================
 
     private void buscarProduto() {
         String entrada = JOptionPane.showInputDialog(this, "Digite o ID ou descrição:");
@@ -516,6 +582,9 @@ private void excluirProduto() {
         try {
             long id = Long.parseLong(model.getValueAt(row, 0).toString());
             Produto p = dao.buscarPorId(id);
+            if (p != null) {
+                preencherCampos(p);
+            }
             if (isEmpty(txtDescricao.getText()) && isEmpty(txtPrecoVenda.getText())) {
                 JOptionPane.showMessageDialog(this,
                         "Produto não pode ser salvo com informações vazias.",

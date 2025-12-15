@@ -170,6 +170,27 @@ public class ProdutoDAO {
         }
         return null;
     }
+//==========================================
+public Produto buscarPorCodigoBarra(String codigoBarra) {
+    String sql = "SELECT * FROM TABELA_PRODUTOS WHERE codigo_barra = ?";
+
+    try (Connection con = Conexao.getConnection();
+         PreparedStatement ps = con.prepareStatement(sql)) {
+
+        ps.setString(1, codigoBarra);
+
+        ResultSet rs = ps.executeQuery();
+
+        if (rs.next()) {
+            return mapear(rs);
+        }
+
+    } catch (SQLException e) {
+        throw new RuntimeException("Erro ao buscar produto por código de barras", e);
+    }
+
+    return null;
+}
 
 //==========================================
     /**
