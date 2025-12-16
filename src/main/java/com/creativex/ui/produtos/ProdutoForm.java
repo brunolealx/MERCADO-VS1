@@ -167,7 +167,7 @@ public class ProdutoForm extends JPanel {
         p.add(campo);
     }
 
-    // ----------------- Eventos -----------------
+    // ----------------bind  Eventos -----------------
     private void bindEvents() {
         btnNovo.addActionListener(e -> modoNovo());
         btnSalvar.addActionListener(e -> salvarProduto());
@@ -175,11 +175,15 @@ public class ProdutoForm extends JPanel {
         btnCancelar.addActionListener(e -> cancelarEdicao());
         btnExcluir.addActionListener(e -> excluirProduto());
 
-
         btnListar.addActionListener(e -> listarPorId());
         btnBuscar.addActionListener(e -> buscarProduto());
         btnBuscarCodigoBarra.addActionListener(e -> buscarPorCodigoBarra());
         btnVoltar.addActionListener(e -> voltarParaHome());
+
+        // ENTER no campo Código de Barras executa a busca
+        txtCodigoBarra.addActionListener(e ->
+                executarBuscaCodigoBarra(txtCodigoBarra.getText().trim())
+        );
 
         table.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
@@ -191,6 +195,7 @@ public class ProdutoForm extends JPanel {
             }
         });
     }
+
 
     // ----------------- Operações de UI -----------------
     private MainWindow getMainWindow() {
