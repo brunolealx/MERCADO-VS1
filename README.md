@@ -12,6 +12,8 @@ Novas funcionalidades estão sendo implementadas gradualmente.
 ## 📌 Funcionalidades
 
 - ✔️ Cadastro de produto  
+- ✔️ Cadastro de Clientes Pessoa física
+- ✔️ Cadastro de Clientes Pessoa Jurídica
 - ✔️ Atualização de dados  
 - ✔️ Pesquisa na tabela  
 - ✔️ Interface moderna em Swing  
@@ -32,21 +34,37 @@ src/main/java/com/creativex/
 │ └── Conexao.java # Gerenciamento de conexão com o banco
 ├── model/
 │    └── produto/
-│        └── Produto.java # Classe de domínio
+│    │   └── Produto.java # Classe de domínio
+│    └──cliente/
+│    │   └──Cliente.java
+│    └──clientepj/
+│    │   └──Clientepj.java
+│    └──fornecedor/
+│    │   └──Fornecedor.java
+│    └──usuario/
+│        └──Usuario.java
 ├── dao/
 │     └──produto/
 │     │  └── ProdutoDAO.java # CRUD completo
 │     └──usuario/
-│        └── UsuarioDAO.java
+│     │  └── UsuarioDAO.java
+│     └──clientes/
+│     │   └──ClientesDAO.java
+│     └──clientepj/
+│     │   └──ClientespjDAO.java
+│     └──fornecedores/
+│         └──FornecedoresDAO.java 
 ├── ui/
 │   └──produtos/     # Interface gráfica (Swing)
-│   │    └── ProdutoForm.java
+│   │   └── ProdutoForm.java
 │   └──ajuda/
 │   │   └── AjudaForm.java
 │   └──caixas/
 │   │   └──CaixasForm.java
 │   └──clientes/
 │   │   └──ClientesForm.java
+│   └──clientepj/
+│   │   └──ClientespjForm.java
 │   └──estoque/
 │   │   └──EstoqueForm.java
 │   └──fornecedores/
@@ -56,7 +74,7 @@ src/main/java/com/creativex/
 │   └──listagens/
 │   │   └──listagensForm.java
 │   └──login/
-│      └──LoginForm.java
+│       └──LoginForm.java
 └── Main.java # Entrada da aplicação
 
 ---
