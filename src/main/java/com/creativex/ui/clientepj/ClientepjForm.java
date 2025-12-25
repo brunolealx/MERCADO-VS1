@@ -2,7 +2,6 @@ package com.creativex.ui.clientepj;
 
 import com.creativex.dao.clientepj.ClientepjDAO;
 import com.creativex.model.clientepj.Clientepj;
-import com.creativex.model.fornecedor.Fornecedor;
 import com.creativex.ui.HomeScreen;
 import com.creativex.ui.MainWindow;
 

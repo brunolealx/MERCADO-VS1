@@ -85,7 +85,6 @@ src/main/java/com/creativex/
 - MySQL 5.7+ ou MariaDB
 - Driver JDBC (MySQL Connector)
 
-
 ### 📌 Script para criar o banco:
 1. Execute o script 
 `Usar arquivo Mysql /MERCADO-VS1/src/main/resources/TABELA_PRODUTOS	sql`

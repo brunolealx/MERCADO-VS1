@@ -6,6 +6,7 @@ import com.creativex.ui.produtos.ProdutoForm;
 import com.creativex.ui.estoque.EstoqueForm;
 import com.creativex.ui.clientes.ClientesForm;
 import com.creativex.ui.clientepj.ClientepjForm;
+import com.creativex.ui.fornecedor.FornecedoresForm;
 import com.creativex.ui.caixas.CaixaForm;
 import com.creativex.ui.ajuda.AjudaForm;
 //import com.creativex.ui.listagens.ListagensForm;
@@ -98,7 +99,7 @@ public class MainWindow extends JFrame {
         btnclientes.addActionListener(e -> abrirModulo(new ClientesForm()));
         btnclientepj.addActionListener(e -> abrirModulo(new ClientepjForm()));
 
-        btnFornecedores.addActionListener(e -> abrirModulo(new com.creativex.ui.fornecedor.FornecedoresForm()));
+        btnFornecedores.addActionListener(e -> abrirModulo(new FornecedoresForm()));
         btnCaixas.addActionListener(e -> abrirModulo(new CaixaForm()));
         btnImpressoras.addActionListener(e ->
                 JOptionPane.showMessageDialog(this, "Módulo Impressoras em desenvolvimento"));
