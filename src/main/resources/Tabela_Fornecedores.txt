@@ -1,0 +1,45 @@
+📌 Observações importantes (boas práticas)
+1️⃣ CNPJ sem máscara
+
+No banco:
+
+cnpj → 12345678000199
+
+
+No form:
+
+máscara só para exibição
+
+ao salvar → replaceAll("\\D","")
+
+✔ Isso você já está fazendo corretamente.
+
+2️⃣ Por que VARCHAR(14) no CNPJ?
+
+CNPJ sempre tem 14 dígitos
+
+Não use BIGINT (perde zeros à esquerda)
+
+3️⃣ Índices criados
+
+uk_fornecedor_cnpj → evita duplicidade
+
+idx_fornecedor_razao → busca rápida por nome
+
+idx_fornecedor_cidade → relatórios / filtros
+
+4️⃣ Compatibilidade com o DAO
+
+Este SQL é 100% compatível com:
+
+buscarPorId
+
+buscarPorRazaoSocial
+
+listarPorIdLimite
+
+inserir
+
+atualizar
+
+Nenhum ajuste adicional é necessário no DAO.

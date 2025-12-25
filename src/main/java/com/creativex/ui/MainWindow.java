@@ -5,7 +5,7 @@ package com.creativex.ui;
 import com.creativex.ui.produtos.ProdutoForm;
 import com.creativex.ui.estoque.EstoqueForm;
 import com.creativex.ui.clientes.ClientesForm;
-import com.creativex.ui.fornecedores.FornecedoresForm;
+import com.creativex.ui.clientepj.ClientepjForm;
 import com.creativex.ui.caixas.CaixaForm;
 import com.creativex.ui.ajuda.AjudaForm;
 //import com.creativex.ui.listagens.ListagensForm;
@@ -74,7 +74,8 @@ public class MainWindow extends JFrame {
         // Botões com mesmo estilo do ProdutoForm (simples, sem emojis, sem estilo custom)
         JButton btnProdutos     = new JButton("Produtos");
         JButton btnEstoque      = new JButton("Estoque");
-        JButton btnClientes     = new JButton("Clientes");
+        JButton btnclientes     = new JButton("clientes");
+        JButton btnclientepj     = new JButton("clientesPJ");
         JButton btnFornecedores = new JButton("Fornecedores");
         JButton btnCaixas       = new JButton("Caixas");
         JButton btnImpressoras  = new JButton("Impressoras");
@@ -83,7 +84,8 @@ public class MainWindow extends JFrame {
         // Adicionar botões (ordem igual à original)
         menu.add(btnProdutos);
         menu.add(btnEstoque);
-        menu.add(btnClientes);
+        menu.add(btnclientes);
+        menu.add(btnclientepj);
         menu.add(btnFornecedores);
         menu.add(btnCaixas);
         menu.add(btnImpressoras);
@@ -93,8 +95,10 @@ public class MainWindow extends JFrame {
         // === AÇÕES ORIGINAIS ===
         btnProdutos.addActionListener(e -> abrirModulo(new ProdutoForm()));
         btnEstoque.addActionListener(e -> abrirModulo(new EstoqueForm()));
-        btnClientes.addActionListener(e -> abrirModulo(new ClientesForm()));
-        btnFornecedores.addActionListener(e -> abrirModulo(new FornecedoresForm()));
+        btnclientes.addActionListener(e -> abrirModulo(new ClientesForm()));
+        btnclientepj.addActionListener(e -> abrirModulo(new ClientepjForm()));
+
+        btnFornecedores.addActionListener(e -> abrirModulo(new com.creativex.ui.fornecedor.FornecedoresForm()));
         btnCaixas.addActionListener(e -> abrirModulo(new CaixaForm()));
         btnImpressoras.addActionListener(e ->
                 JOptionPane.showMessageDialog(this, "Módulo Impressoras em desenvolvimento"));
@@ -121,7 +125,7 @@ public class MainWindow extends JFrame {
 
     /**
      * Remove o conteúdo atual e adiciona o painel do módulo.
-     * O painel passado deve ser um JPanel (cada módulo: ProdutoForm, ClienteForm, ...)
+     * O painel passado deve ser um JPanel (cada módulo: ProdutoForm, clientesForm, ...)
      */
     public void abrirModulo(JPanel painel) {
         painelConteudo.removeAll();
