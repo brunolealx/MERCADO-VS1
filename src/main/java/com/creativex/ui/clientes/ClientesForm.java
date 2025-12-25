@@ -1,135 +1,72 @@
 package com.creativex.ui.clientes;
 
 import com.creativex.dao.cliente.ClienteDAO;
-import com.creativex.model.clientepj.Clientepj;
+import com.creativex.model.cliente.Cliente;
 import com.creativex.ui.HomeScreen;
 import com.creativex.ui.MainWindow;
-import com.creativex.model.cliente.Cliente;
-
-//imports para formatação de campos
-import javax.swing.text.MaskFormatter;
-import javax.swing.text.DefaultFormatterFactory;
-import javax.swing.JFormattedTextField;
-import java.text.NumberFormat;
-import java.text.ParseException;
-import java.util.Locale;
-
-import java.awt.event.FocusAdapter;
-import java.awt.event.FocusEvent;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.text.MaskFormatter;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.List;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 
 public class ClientesForm extends JPanel {
 
-    // Campos
-    private JTextField txtId, txtNome, txtRgIe, txtEmail;
-
-    private JFormattedTextField txtCpf;
-    private JFormattedTextField txtTelefone;
-    private JFormattedTextField txtCep;
-    private JFormattedTextField txtLimiteCredito;
-
-    private JTextField txtEndereco, txtNumero, txtBairro, txtCidade, txtUf;
-    // Botões
+    private JTextField txtId, txtNome, txtRg, txtEmail, txtEndereco, txtNumero, txtBairro, txtCidade, txtUf;
+    private JFormattedTextField txtCpf, txtTelefone, txtCep, txtLimiteCredito;
     private JButton btnNovo, btnSalvar, btnAtualizar, btnBuscar, btnListar, btnVoltar;
-
-    // Tabela
     private JTable table;
     private DefaultTableModel model;
-
-    // DAO
-    private final ClienteDAO dao;
+    private final ClienteDAO dao = new ClienteDAO();
 
     public ClientesForm() {
-        dao = new ClienteDAO();
         setLayout(new BorderLayout());
         setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
-
         initComponents();
         bindEvents();
     }
 
-    // ================== UI ==================
     private void initComponents() {
-
-        JTabbedPane abas = new JTabbedPane();
-        abas.addTab("Dados do Cliente", criarPainelCliente());
-        add(abas, BorderLayout.NORTH);
-
-        model = new DefaultTableModel(new String[]{
-                "ID", "Nome", "CPF/CNPJ", "Telefone", "Cidade"
-        }, 0) {
-            public boolean isCellEditable(int r, int c) {
-                return false;
-            }
+        model = new DefaultTableModel(new String[]{"ID", "Nome", "CPF", "Telefone", "Cidade"}, 0) {
+            @Override
+            public boolean isCellEditable(int r, int c) { return false; }
         };
-
         table = new JTable(model);
+
+        add(criarPainelCampos(), BorderLayout.NORTH);
         add(new JScrollPane(table), BorderLayout.CENTER);
-
-        JPanel pnlBotoes = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 8));
-
-        btnNovo = new JButton("Novo");
-        btnSalvar = new JButton("Salvar");
-        btnAtualizar = new JButton("Atualizar");
-        btnBuscar = new JButton("Buscar");
-        btnListar = new JButton("Listar");
-
-        btnVoltar = new JButton("Voltar");
-
-        pnlBotoes.add(btnNovo);
-        pnlBotoes.add(btnSalvar);
-        pnlBotoes.add(btnAtualizar);
-        pnlBotoes.add(btnBuscar);
-        pnlBotoes.add(btnListar);
-        pnlBotoes.add(btnVoltar);
-
-        add(pnlBotoes, BorderLayout.SOUTH);
+        add(criarPainelBotoes(), BorderLayout.SOUTH);
 
         btnSalvar.setVisible(false);
         btnAtualizar.setEnabled(false);
     }
 
-    private JPanel criarPainelCliente() {
+    private JPanel criarPainelCampos() {
+        JPanel p = new JPanel(new GridLayout(15, 1, 5, 5));
+        p.setBorder(BorderFactory.createTitledBorder("Cadastro de Clientes PF"));
 
-        JPanel p = new JPanel(new GridLayout(13, 1, 6, 6));
-        p.setBorder(BorderFactory.createTitledBorder("Cadastro"));
-
-        txtId = new JTextField();       addCampo(p, "ID", txtId);
-        txtId.setEditable(false);
-
-        txtNome = new JTextField();     addCampo(p, "Nome*", txtNome);
-        txtRgIe = new JTextField();     addCampo(p, "RG / IE", txtRgIe);
-
-        txtCpf = new JFormattedTextField();   addCampo(p, "CPF / CNPJ*", txtCpf);
-        txtCpf.addFocusListener(new FocusAdapter() {
-            @Override
-            public void focusLost(FocusEvent e) {
-                aplicarMascaraCpf();
-            }
-        });
-
-        txtTelefone = new JFormattedTextField(criarMascara("(##) #####-####"));
-        addCampo(p, "Telefone", txtTelefone);
-        txtEmail = new JTextField();    addCampo(p, "Email", txtEmail);
-        txtEndereco = new JTextField(); addCampo(p, "Endereço", txtEndereco);
-        txtNumero = new JTextField();   addCampo(p, "Número", txtNumero);
-        txtBairro = new JTextField();   addCampo(p, "Bairro", txtBairro);
-        txtCidade = new JTextField();   addCampo(p, "Cidade*", txtCidade);
-        txtCep = new JFormattedTextField(criarMascara("#####-###")); addCampo(p, "CEP", txtCep);
-        txtUf = new JTextField();       addCampo(p, "UF", txtUf);
-        NumberFormat moeda = NumberFormat.getCurrencyInstance(Locale.of("pt", "BR"));
-        txtLimiteCredito = new JFormattedTextField(moeda);
-        txtLimiteCredito.setValue(BigDecimal.ZERO);
-
-        addCampo(p, "Limite Crédito (R$)", txtLimiteCredito);
+        txtId = new JTextField(); txtId.setEditable(false); addCampo(p, "ID", txtId);
+        txtNome = new JTextField(); addCampo(p, "Nome Completo*", txtNome);
+        txtRg = new JTextField(); addCampo(p, "RG", txtRg);
+        txtCpf = new JFormattedTextField(criarMascara("###.###.###-##")); addCampo(p, "CPF*", txtCpf);
+        txtTelefone = new JFormattedTextField(criarMascara("(##) #####-####")); addCampo(p, "Telefone", txtTelefone);
+        txtEmail = new JTextField(); addCampo(p, "Email", txtEmail);
+        txtCep = new JFormattedTextField(criarMascara("#####-###")); addCampo(p, "CEP (Busca Automática)", txtCep);
+        txtEndereco = new JTextField(); addCampo(p, "Logradouro", txtEndereco);
+        txtNumero = new JTextField(); addCampo(p, "Número", txtNumero);
+        txtBairro = new JTextField(); addCampo(p, "Bairro", txtBairro);
+        txtCidade = new JTextField(); addCampo(p, "Cidade*", txtCidade);
+        txtUf = new JTextField(); addCampo(p, "UF", txtUf);
+        txtLimiteCredito = new JFormattedTextField(); txtLimiteCredito.setValue(BigDecimal.ZERO);
+        addCampo(p, "Limite de Crédito (R$)", txtLimiteCredito);
 
         return p;
     }
@@ -139,9 +76,20 @@ public class ClientesForm extends JPanel {
         p.add(campo);
     }
 
-    // ================== EVENTOS ==================
-    private void bindEvents() {
+    private JPanel criarPainelBotoes() {
+        JPanel pnl = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 8));
+        btnNovo = new JButton("Novo");
+        btnSalvar = new JButton("Salvar");
+        btnAtualizar = new JButton("Atualizar");
+        btnBuscar = new JButton("Buscar");
+        btnListar = new JButton("Listar");
+        btnVoltar = new JButton("Voltar");
+        pnl.add(btnNovo); pnl.add(btnSalvar); pnl.add(btnAtualizar);
+        pnl.add(btnBuscar); pnl.add(btnListar); pnl.add(btnVoltar);
+        return pnl;
+    }
 
+    private void bindEvents() {
         btnNovo.addActionListener(e -> modoNovo());
         btnSalvar.addActionListener(e -> salvar());
         btnAtualizar.addActionListener(e -> atualizar());
@@ -149,240 +97,233 @@ public class ClientesForm extends JPanel {
         btnListar.addActionListener(e -> listar());
         btnVoltar.addActionListener(e -> voltar());
 
+        // Busca de CEP Automática
+        txtCep.addFocusListener(new FocusAdapter() {
+
+            public void focusLost(FocusEvent e) { buscarCep(txtCep.getText()); }
+        });
+
+        txtCpf.addKeyListener(new KeyAdapter() {
+
+            public void keyReleased(KeyEvent e) {
+                String cpf = somenteNumeros(txtCpf.getText());
+                if (cpf.length() == 11) {
+                    txtCpf.setForeground(validarCPF(cpf) ? new Color(0, 120, 0) : Color.RED);
+                }
+            }
+        });
+
         table.addMouseListener(new MouseAdapter() {
+            @Override
             public void mouseClicked(MouseEvent e) {
                 int row = table.getSelectedRow();
-                if (row >= 0) {
-                    carregarDaTabela(row);
-                    modoEdicao();
-                }
+                if (row >= 0) carregarCliente((long) model.getValueAt(row, 0));
             }
         });
     }
 
-    // ================== AÇÕES ==================
-    private void modoNovo() {
-        limparCampos();
-        txtId.setText("");
-        btnSalvar.setVisible(true);
-        txtNome.requestFocus();
+    private void buscarCep(String cep) {
+        String cleanCep = somenteNumeros(cep);
+        if (cleanCep.length() != 8) return;
+        new Thread(() -> {
+            try {
+                URL url = new URL("https://viacep.com.br/ws/" + cleanCep + "/json/");
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                if (conn.getResponseCode() == 200) {
+                    BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                    String json = br.lines().reduce("", (acc, line) -> acc + line);
+                    if (json.contains("\"erro\": true")) return;
+                    SwingUtilities.invokeLater(() -> {
+                        txtEndereco.setText(extrairValorJson(json, "logradouro"));
+                        txtBairro.setText(extrairValorJson(json, "bairro"));
+                        txtCidade.setText(extrairValorJson(json, "localidade"));
+                        txtUf.setText(extrairValorJson(json, "uf"));
+                        txtNumero.requestFocus();
+                    });
+                }
+            } catch (Exception e) { System.err.println("Erro CEP: " + e.getMessage()); }
+        }).start();
     }
 
-    private void modoEdicao() {
-        btnSalvar.setVisible(false);
-        btnAtualizar.setEnabled(true);
-    }
-
-    private void salvar() {
-
-        if (!validar()) return;
-
+    private String extrairValorJson(String json, String campo) {
         try {
-            Cliente c = criarCliente();
-            dao.inserir(c);
-
-            JOptionPane.showMessageDialog(this, "Cliente cadastrado com sucesso!");
-            listar();
-            modoEdicao();
-
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Erro ao salvar: " + e.getMessage());
-        }
+            String chave = "\"" + campo + "\": \"";
+            int i = json.indexOf(chave) + chave.length();
+            return json.substring(i, json.indexOf("\"", i));
+        } catch (Exception e) { return ""; }
     }
 
     private void atualizar() {
-
         if (txtId.getText().isBlank()) {
-            JOptionPane.showMessageDialog(this, "Selecione um cliente.");
+            JOptionPane.showMessageDialog(this, "Selecione um cliente para atualizar.");
             return;
         }
-
+        if (!validarForm()) return;
         try {
-            Cliente c = criarCliente();
+            Cliente c = criarObjetoCliente();
             c.setId(Long.parseLong(txtId.getText()));
             dao.atualizar(c);
-
-            JOptionPane.showMessageDialog(this, "Cliente atualizado!");
+            JOptionPane.showMessageDialog(this, "Cliente atualizado com sucesso!");
             listar();
-
-        } catch (Exception e) {
+            modoNovo();
+        } catch (SQLException e) {
             JOptionPane.showMessageDialog(this, "Erro ao atualizar: " + e.getMessage());
         }
     }
-//=======Buscar======
-    private void buscar() {
 
-        String filtro = JOptionPane.showInputDialog(this, "Digite ID, Nome ou CPF/CNPJ:");
-        if (filtro == null || filtro.isBlank()) return;
-        String somenteNumeros = filtro.replaceAll("\\D", "");
+    private boolean validarCPF(String cpf) {
+        if (cpf.length() != 11 || cpf.matches("(\\d)\\1{10}")) return false;
         try {
-            model.setRowCount(0);
-            if (somenteNumeros.matches("\\d+") && somenteNumeros.length() <= 9) {
-                Cliente c = dao.buscarPorId(Long.parseLong(somenteNumeros));
-                if (c != null) {
-                    preencherCampos(c);
-                    modoEdicao(); //  habilita atualização
-                } else {
-                    JOptionPane.showMessageDialog(this, "Fornecedor não encontrado.");
-                }
-                return;
+            int d1 = 0, d2 = 0;
+            for (int i = 0; i < 9; i++) {
+                int n = Integer.parseInt(cpf.substring(i, i + 1));
+                d1 += (10 - i) * n;
+                d2 += (11 - i) * n;
             }
+            int r1 = 11 - (d1 % 11); if (r1 > 9) r1 = 0;
+            d2 += 2 * r1;
+            int r2 = 11 - (d2 % 11); if (r2 > 9) r2 = 0;
+            return cpf.endsWith("" + r1 + r2);
+        } catch (Exception e) { return false; }
+    }
 
-            List<Cliente> lista = dao.buscarPorFiltro(filtro);
-            model.setRowCount(0);
+    private void salvar() {
+        if (!validarForm()) return;
+        try {
+            dao.inserir(criarObjetoCliente());
+            JOptionPane.showMessageDialog(this, "Cliente salvo!");
+            listar();
+            modoNovo();
+        } catch (SQLException e) { JOptionPane.showMessageDialog(this, "Erro: " + e.getMessage()); }
+    }
 
-            for (Cliente c : lista) {
-                model.addRow(new Object[]{
-                        c.getId(), c.getNome(), c.getCpf(),
-                        c.getTelefone(), c.getCidade()
-                });
-            }
+    private boolean validarForm() {
+        if (txtNome.getText().isBlank()) return msgErro("Nome é obrigatório.");
+        if (!validarCPF(somenteNumeros(txtCpf.getText()))) return msgErro("CPF inválido.");
+        return true;
+    }
 
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Erro na busca: " + e.getMessage());
-        }
+    private boolean msgErro(String m) {
+        JOptionPane.showMessageDialog(this, m);
+        return false;
     }
 
     private void listar() {
         try {
             model.setRowCount(0);
-            List<Cliente> lista = dao.listarPorIdLimite(1, 10);
+            List<Cliente> lista = dao.listarPorIdLimite(1, 100);
             for (Cliente c : lista) {
-                model.addRow(new Object[]{
-                        c.getId(), c.getNome(), c.getCpf(),
-                        c.getTelefone(), c.getCidade()
-                });
+                model.addRow(new Object[]{c.getId(), c.getNome(), c.getCpf(), c.getTelefone(), c.getCidade()});
             }
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Erro ao listar.");
+        } catch (SQLException e) { e.printStackTrace(); }
+    }
+
+    private void carregarCliente(long id) {
+        try {
+            Cliente c = dao.buscarPorId(id);
+            if (c != null) {
+                txtId.setText(String.valueOf(c.getId()));
+                txtNome.setText(c.getNome());
+                txtCpf.setText(c.getCpf());
+                txtRg.setText(c.getRg());
+                txtTelefone.setText(c.getTelefone());
+                txtEmail.setText(c.getEmail());
+                txtCep.setText(c.getCep());
+                txtEndereco.setText(c.getEndereco());
+                txtNumero.setText(c.getNumero());
+                txtBairro.setText(c.getBairro());
+                txtCidade.setText(c.getCidade());
+                txtUf.setText(c.getUf());
+                txtLimiteCredito.setValue(c.getLimiteCredito());
+                btnAtualizar.setEnabled(true);
+                btnSalvar.setVisible(false);
+
+                btnSalvar.setVisible(false);  // Esconde o salvar (evita duplicar)
+                btnAtualizar.setEnabled(true); // Habilita o atualizar
+
+                revalidate();
+                repaint();
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+    }
+    private void modoNovo() {
+        limparRec(this); // Limpa todos os campos
+        txtId.setText(""); // Garante que o ID esteja vazio
+        txtLimiteCredito.setValue(BigDecimal.ZERO);
+
+        btnSalvar.setVisible(true);    // Mostra o Salvar para novo cadastro
+        btnAtualizar.setEnabled(false); // Desativa o atualizar (pois não há ID ainda)
+
+        txtNome.requestFocus(); // Coloca o cursor no nome
+        revalidate(); // Avisa o Swing que o painel mudou
+        repaint();
+    }
+
+    private void limparRec(Container container) {
+        for (Component c : container.getComponents()) {
+            if (c instanceof JTextField tf) tf.setText("");
+            else if (c instanceof Container ct) limparRec(ct);
         }
     }
 
-    // ================== UTIL ==================
-    private MaskFormatter criarMascara(String mascara) {
-        try {
-            MaskFormatter mf = new MaskFormatter(mascara);
-            mf.setPlaceholderCharacter('_');
-            mf.setValueContainsLiteralCharacters(false);
-            return mf;
-        } catch (ParseException e) {
-            throw new RuntimeException(e);
-        }
-    }
-    //===
-    private void aplicarMascaraCpf() {
-        String valor = txtCpf.getText().replaceAll("\\D", "");
-
-        try {
-            if (valor.length() <= 11) {
-                txtCpf.setFormatterFactory(
-                        new DefaultFormatterFactory(criarMascara("###.###.###-##"))
-                );
-            } else {
-                txtCpf.setFormatterFactory(
-                        new DefaultFormatterFactory(criarMascara("##.###.###/####-##"))
-                );
-            }
-            txtCpf.setValue(valor);
-        } catch (Exception ignored) {}
-    }
-//===
-// CRIAR OS FORMATADORES (MÁSCARAS)
-//===
-    private Cliente criarCliente() {
-
+    private Cliente criarObjetoCliente() {
         Cliente c = new Cliente();
         c.setNome(txtNome.getText());
-        c.setCpf(txtCpf.getText().replaceAll("\\D", ""));
-        c.setRg(txtRgIe.getText());
-        c.setTelefone(txtTelefone.getText().replaceAll("\\D", ""));
+        c.setCpf(somenteNumeros(txtCpf.getText()));
+        c.setRg(txtRg.getText());
+        c.setTelefone(somenteNumeros(txtTelefone.getText()));
         c.setEmail(txtEmail.getText());
+        c.setCep(somenteNumeros(txtCep.getText()));
         c.setEndereco(txtEndereco.getText());
         c.setNumero(txtNumero.getText());
         c.setBairro(txtBairro.getText());
         c.setCidade(txtCidade.getText());
         c.setUf(txtUf.getText());
-        c.setCep(txtCep.getText().replaceAll("\\D", ""));
-        c.setLimiteCredito(parseBig(txtLimiteCredito.getText()));
+        c.setLimiteCredito(new BigDecimal(txtLimiteCredito.getValue().toString()));
         return c;
     }
 
-    private void preencherCampos(Cliente c) {
+    private String somenteNumeros(String s) { return s == null ? "" : s.replaceAll("\\D", ""); }
 
-        txtId.setText(String.valueOf(c.getId()));
-        txtNome.setText(c.getNome());
-        txtCpf.setText(c.getCpf());
-        aplicarMascaraCpf();
-
-        txtRgIe.setText(c.getRg());
-        txtTelefone.setText(c.getTelefone());
-        txtEmail.setText(c.getEmail());
-        txtEndereco.setText(c.getEndereco());
-        txtNumero.setText(c.getNumero());
-        txtBairro.setText(c.getBairro());
-        txtCidade.setText(c.getCidade());
-        txtUf.setText(c.getUf());
-        txtCep.setText(c.getCep());
-        txtLimiteCredito.setText(String.valueOf(c.getLimiteCredito()));
-    }
-
-    private void carregarDaTabela(int row) {
-        txtId.setText(String.valueOf(model.getValueAt(row, 0)));
-        txtNome.setText(String.valueOf(model.getValueAt(row, 1)));
-        txtCpf.setText(String.valueOf(model.getValueAt(row, 2)));
-        txtTelefone.setText(String.valueOf(model.getValueAt(row, 3)));
-        txtCidade.setText(String.valueOf(model.getValueAt(row, 4)));
-    }
-
-    private boolean validar() {
-
-        if (txtNome.getText().isBlank()) {
-           JOptionPane.showMessageDialog(this, "Nome é obrigatório.");
-           txtNome.requestFocus();
-            return false;
-        }
-
-        if (txtCidade.getText().isBlank()) {
-            JOptionPane.showMessageDialog(this, "Cidade é obrigatória.");
-            return false;
-        }
-
-        return true;
-    }
-
-    private BigDecimal parseBig(String valor) {
+    private MaskFormatter criarMascara(String m) {
         try {
-            valor = valor.replace("R$", "")
-                    .replace(".", "")
-                    .replace(",", ".")
-                    .trim();
-            return new BigDecimal(valor);
-        } catch (Exception e) {
-            return BigDecimal.ZERO;
-        }
+            MaskFormatter mf = new MaskFormatter(m);
+            mf.setPlaceholderCharacter('_');
+            mf.setValueContainsLiteralCharacters(true);
+            return mf;
+        } catch (Exception e) { return null; }
     }
 
-    private void limparCampos() {
-        for (Component c : getComponents()) limparRec(c);
-    }
+    private void buscar() {
+        String f = JOptionPane.showInputDialog(this, "ID, Nome ou CPF:");
+        if (f == null || f.isBlank()) return;
+        try {
+            model.setRowCount(0);
+            String num = somenteNumeros(f);
 
-    private void limparRec(Component c) {
-        if (c instanceof JTextField tf) tf.setText("");
-        if (c instanceof Container ct)
-            for (Component cc : ct.getComponents()) limparRec(cc);
+            if (num.length() > 0 && num.length() <= 6) {
+                Cliente c = dao.buscarPorId(Long.parseLong(num));
+                if (c != null) {
+                    model.addRow(new Object[]{c.getId(), c.getNome(), c.getCpf(), c.getTelefone(), c.getCidade()});
+                    carregarCliente(c.getId()); // Sincroniza campos
+                }
+            } else if (num.length() == 11) {
+                Cliente c = dao.buscarPorCpf(num);
+                if (c != null) {
+                    model.addRow(new Object[]{c.getId(), c.getNome(), c.getCpf(), c.getTelefone(), c.getCidade()});
+                    carregarCliente(c.getId()); // Sincroniza campos
+                }
+            } else {
+                List<Cliente> lista = dao.buscarPorNome(f);
+                for (Cliente c : lista) {
+                    model.addRow(new Object[]{c.getId(), c.getNome(), c.getCpf(), c.getTelefone(), c.getCidade()});
+                }
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
     }
 
     private void voltar() {
-        MainWindow mw = getMainWindow();
+        MainWindow mw = (MainWindow) SwingUtilities.getWindowAncestor(this);
         if (mw != null) mw.abrirModulo(new HomeScreen());
-    }
-
-    private MainWindow getMainWindow() {
-        Container p = getParent();
-        while (p != null) {
-            if (p instanceof MainWindow mw) return mw;
-            p = p.getParent();
-        }
-        return null;
     }
 }
