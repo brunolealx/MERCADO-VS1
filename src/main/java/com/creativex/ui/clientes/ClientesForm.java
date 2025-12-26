@@ -108,6 +108,7 @@ public class ClientesForm extends JPanel {
             public void keyReleased(KeyEvent e) {
                 String cpf = somenteNumeros(txtCpf.getText());
                 if (cpf.length() == 11) {
+                    //PASSA O CPF para checar se existe !!!
                     txtCpf.setForeground(validarCPF(cpf) ? new Color(0, 120, 0) : Color.RED);
                 }
             }

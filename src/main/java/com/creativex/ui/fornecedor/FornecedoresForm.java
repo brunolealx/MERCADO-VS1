@@ -114,15 +114,22 @@ public class FornecedoresForm extends JPanel {
         p.add(btnBuscar);
         p.add(btnListar);
         p.add(btnVoltar);
-
         return p;
     }
-
     private void addCampo(JPanel p, String label, JTextField campo) {
         p.add(new JLabel(label));
         p.add(campo);
     }
-
+    private MaskFormatter criarMascara(String m) {
+        try {
+            MaskFormatter mf = new MaskFormatter(m);
+            mf.setPlaceholderCharacter('_');
+            mf.setValueContainsLiteralCharacters(true);
+            return mf;
+        } catch (ParseException e) {
+            throw new RuntimeException(e);
+        }
+    }
     // ================= EVENTOS =================
     private void bindEvents() {
 
@@ -133,15 +140,51 @@ public class FornecedoresForm extends JPanel {
         btnListar.addActionListener(e -> listar());
         btnVoltar.addActionListener(e -> voltar());
 
-        table.addMouseListener(new MouseAdapter() {
-            public void mouseClicked(MouseEvent e) {
-                int row = table.getSelectedRow();
-                if (row >= 0) {
-                    carregarDaTabela(row);
-                    modoEdicao();
-                }
+        txtCnpj.addKeyListener(new KeyAdapter() {
+
+            public void keyReleased(KeyEvent e) {
+                String cnpj = somenteNumeros(txtCnpj.getText());
+                //PASSA O Cnpj para checar se existe !!!
+                txtCnpj.setForeground(validarCNPJ(cnpj) ? new Color(0, 120, 0) : Color.RED);
+
             }
         });
+    }
+//== Remove caracteres não numéricos antes de validar
+private String somenteNumeros(String s) { return s == null ? "" : s.replaceAll("\\D", ""); }
+
+    //=== teste de cnpj====
+    private boolean validarCNPJ(String cnpj) {
+
+        // CNPJ deve ter 14 dígitos e não pode ser uma sequência repetida
+        if (cnpj.length() != 14 || cnpj.matches("(\\d)\\1{13}")) return false;
+
+        try {
+            int[] peso1 = {5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2};
+            int[] peso2 = {6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2};
+
+            // Cálculo do primeiro dígito (r1)
+            int soma1 = 0;
+            for (int i = 0; i < 12; i++) {
+                soma1 += Integer.parseInt(cnpj.substring(i, i + 1)) * peso1[i];
+            }
+            int r1 = soma1 % 11;
+            r1 = (r1 < 2) ? 0 : 11 - r1;
+
+            // Cálculo do segundo dígito (r2)
+            int soma2 = 0;
+            for (int i = 0; i < 12; i++) {
+                soma2 += Integer.parseInt(cnpj.substring(i, i + 1)) * peso2[i];
+            }
+            soma2 += r1 * peso2[12]; // Inclui o primeiro dígito calculado no peso 2
+
+            int r2 = soma2 % 11;
+            r2 = (r2 < 2) ? 0 : 11 - r2;
+
+            return cnpj.endsWith("" + r1 + r2);
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     // ================= AÇÕES =================
@@ -269,16 +312,7 @@ public class FornecedoresForm extends JPanel {
         }
     }
     // ================= UTIL =================
-  	private MaskFormatter criarMascara(String m) {
-    try {
-        MaskFormatter mf = new MaskFormatter(m);
-        mf.setPlaceholderCharacter('_');
-        mf.setValueContainsLiteralCharacters(true);
-        return mf;
-          } catch (ParseException e) {
-          throw new RuntimeException(e);
-          }
-    }
+
 	    //====================================
     private Fornecedor criarFornecedor() {
 
