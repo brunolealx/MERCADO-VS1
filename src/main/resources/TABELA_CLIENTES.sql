@@ -1,16 +1,16 @@
-CREATE TABLE TABELA_CLIENTES (
+CREATE TABLE IF NOT EXISTS TABELA_CLIENTES (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    nome VARCHAR(120) NOT NULL,
-    cpf_cnpj VARCHAR(20),
-    rg_ie VARCHAR(20),
-    telefone VARCHAR(11),
-    email VARCHAR(120),
+    nome VARCHAR(100) NOT NULL,
+    cpf VARCHAR(11) NOT NULL UNIQUE,
+    rg VARCHAR(20),
+    telefone VARCHAR(15),
+    email VARCHAR(100),
     endereco VARCHAR(150),
     numero VARCHAR(10),
-    bairro VARCHAR(60),
-    cidade VARCHAR(60),
+    bairro VARCHAR(50),
+    cidade VARCHAR(50) NOT NULL,
     uf CHAR(2),
     cep VARCHAR(8),
-    limite_credito DECIMAL(10,2),
+    limite_credito DECIMAL(10, 2) DEFAULT 0.00,
     data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+) ENGINE=InnoDB;

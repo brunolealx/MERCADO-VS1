@@ -1,13 +1,13 @@
 //Bruno Leal
 //creativex sistemas
 package com.creativex.ui;
-
+import com.creativex.ui.cadastrousuario.CadastroUsuarioForm;
 import com.creativex.ui.produtos.ProdutoForm;
 import com.creativex.ui.estoque.EstoqueForm;
 import com.creativex.ui.clientes.ClientesForm;
 import com.creativex.ui.clientepj.ClientepjForm;
 import com.creativex.ui.fornecedor.FornecedoresForm;
-import com.creativex.ui.caixas.CaixaForm;
+import com.creativex.ui.caixas.CaixasForm;
 import com.creativex.ui.ajuda.AjudaForm;
 //import com.creativex.ui.listagens.ListagensForm;
 
@@ -78,6 +78,7 @@ public class MainWindow extends JFrame {
         JButton btnclientes     = new JButton("clientes");
         JButton btnclientepj     = new JButton("clientesPJ");
         JButton btnFornecedores = new JButton("Fornecedores");
+        JButton btnUsuarios = new JButton("Usuarios");
         JButton btnCaixas       = new JButton("Caixas");
         JButton btnImpressoras  = new JButton("Impressoras");
         JButton btnAjuda        = new JButton("Ajuda");
@@ -88,6 +89,7 @@ public class MainWindow extends JFrame {
         menu.add(btnclientes);
         menu.add(btnclientepj);
         menu.add(btnFornecedores);
+        menu.add(btnUsuarios);
         menu.add(btnCaixas);
         menu.add(btnImpressoras);
         menu.add(btnAjuda);
@@ -100,7 +102,9 @@ public class MainWindow extends JFrame {
         btnclientepj.addActionListener(e -> abrirModulo(new ClientepjForm()));
 
         btnFornecedores.addActionListener(e -> abrirModulo(new FornecedoresForm()));
-        btnCaixas.addActionListener(e -> abrirModulo(new CaixaForm()));
+        btnUsuarios.addActionListener(e -> abrirModulo(new CadastroUsuarioForm()));
+        btnCaixas.addActionListener(e -> abrirModulo(new CaixasForm()));
+        btnCaixas.addActionListener(e -> abrirModulo(new CaixasForm()));
         btnImpressoras.addActionListener(e ->
                 JOptionPane.showMessageDialog(this, "Módulo Impressoras em desenvolvimento"));
         btnAjuda.addActionListener(e -> abrirModulo(new AjudaForm()));
@@ -134,7 +138,6 @@ public class MainWindow extends JFrame {
         painelConteudo.revalidate();
         painelConteudo.repaint();
     }
-
     /**
      * Saida do sistema.
      *
@@ -152,7 +155,6 @@ public class MainWindow extends JFrame {
             System.exit(0);
         }
     }
-
 }
 
 

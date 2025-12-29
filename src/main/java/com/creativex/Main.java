@@ -1,14 +1,23 @@
-//Bruno Leal
-//creativex sistemas
+// Bruno Leal
+// creativex sistemas
+
 package com.creativex;
-import com.creativex.ui.MainWindow;
-//------------------------------
-//* implementar no futuro
-//import com.creativex.ui.login.LoginForm;
+
+import com.creativex.ui.login.LoginForm;
+import javax.swing.UIManager;
 
 public class Main {
     public static void main(String[] args) {
-  //      javax.swing.SwingUtilities.invokeLater(() -> new LoginForm().setVisible(true));
-        new MainWindow().setVisible(true);
+        // 1. Opcional: Deixa o visual com as cores do Windows/Sistema Operacional
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        // 2. Inicia o sistema obrigatoriamente pela tela de Login
+        javax.swing.SwingUtilities.invokeLater(() -> {
+            new LoginForm().setVisible(true);
+        });
     }
 }

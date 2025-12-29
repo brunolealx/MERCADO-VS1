@@ -1,33 +1,78 @@
-//Bruno Leal
-//creativex sistemas
-
 package com.creativex.model.usuario;
 
 public class Usuario {
 
-    private int id;
-    private String usuario;
-    private String senha;
+    private long id;         // BIGINT no MySQL
+    private String nome;     // Nome completo do funcionário
+    private String login;    // Usuário para entrar no sistema
+    private String senha;    // Senha (armazenada em texto ou hash)
+    private String perfil;   // 'ADMIN' ou 'OPERADOR'
+    private boolean ativo;   // Se o usuário pode ou não logar
 
-    public Usuario() {}
+    // Construtor padrão
+    public Usuario() {
+    }
 
-    public Usuario(int id, String usuario, String senha) {
+    // Construtor auxiliar para facilitar o login/sessão
+    public Usuario(long id, String nome, String perfil) {
         this.id = id;
-        this.usuario = usuario;
+        this.nome = nome;
+        this.perfil = perfil;
+    }
+
+    // Getters e Setters (Seguindo o padrão do seu projeto)
+
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
+    }
+
+    public String getNome() {
+        return nome;
+    }
+
+    public void setNome(String nome) {
+        this.nome = nome;
+    }
+
+    public String getLogin() {
+        return login;
+    }
+
+    public void setLogin(String login) {
+        this.login = login;
+    }
+
+    public String getSenha() {
+        return senha;
+    }
+
+    public void setSenha(String senha) {
         this.senha = senha;
     }
 
-    public Usuario(String usuario, String senha) {
-        this.usuario = usuario;
-        this.senha = senha;
+    public String getPerfil() {
+        return perfil;
     }
 
-    public int getId() { return id; }
-    public void setId(int id) { this.id = id; }
+    public void setPerfil(String perfil) {
+        this.perfil = perfil;
+    }
 
-    public String getUsuario() { return usuario; }
-    public void setUsuario(String usuario) { this.usuario = usuario; }
+    public boolean isAtivo() {
+        return ativo;
+    }
 
-    public String getSenha() { return senha; }
-    public void setSenha(String senha) { this.senha = senha; }
+    public void setAtivo(boolean ativo) {
+        this.ativo = ativo;
+    }
+
+    // Método útil para exibir o nome do usuário em JComboBox ou Logs
+    @Override
+    public String toString() {
+        return this.nome + " (" + this.perfil + ")";
+    }
 }

@@ -6,6 +6,7 @@ package com.creativex.dao.produto;
 import com.creativex.db.Conexao;
 import com.creativex.model.produto.Produto;
 import java.sql.*;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 /**
@@ -170,7 +171,120 @@ public class ProdutoDAO {
         }
         return null;
     }
-//==========================================
+    
+    /**
+     * Registrar Entrada no estoque
+     *Recomendação: Use apenas o movimentarEstoque em todo o sistema.
+     * Para uma entrada de mercadoria,
+     *você chamaria: dao.movimentarEstoque(id, qtd,
+     *  "ENTRADA", "Compra de Fornecedor");
+     * @param 
+     * @return
+     */
+
+    public boolean registrarEntradaEstoque(long idProduto, BigDecimal qtdEntrada, BigDecimal novoPrecoCusto) {
+        String sql = "UPDATE TABELA_PRODUTOS SET quantidade_estoque = quantidade_estoque + ?, preco_custo = ? WHERE id = ?";
+
+        try (Connection conn = Conexao.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setBigDecimal(1, qtdEntrada);
+            stmt.setBigDecimal(2, novoPrecoCusto);
+            stmt.setLong(3, idProduto);
+
+            int linhasAfetadas = stmt.executeUpdate();
+            return linhasAfetadas > 0;
+
+        } catch (SQLException e) {
+            System.err.println("Erro ao atualizar estoque: " + e.getMessage());
+            return false;
+        }
+    }
+
+    // usando com.creativex.util.Sessao e Conexao.getConnection()
+    /**
+     * MÉTODO 1: REGISTRAR VENDA (Saída de Estoque)
+     * Este método é exclusivo para o PDV (Caixa).
+     * Ele garante que a quantidade seja SUBTRAÍDA da tabela principal.
+     */
+    public boolean registrarVenda(long idProduto, BigDecimal qtd, long idUsuario) {
+        // Usamos o operador de subtração (-) no SQL para garantir a baixa
+        String sqlUpdate = "UPDATE TABELA_PRODUTOS SET quantidade_estoque = quantidade_estoque - ? WHERE id = ?";
+        String sqlInsert = "INSERT INTO TABELA_MOVIMENTACOES_ESTOQUE (id_produto, tipo, quantidade, motivo, id_usuario) VALUES (?, 'SAIDA', ?, 'Venda PDV', ?)";
+
+        Connection conn = null;
+        try {
+            conn = Conexao.getConnection();
+            conn.setAutoCommit(false); // Inicia transação
+
+            // 1. Atualiza a Tabela de Produtos (Subtraindo)
+            try (PreparedStatement stmtUpdate = conn.prepareStatement(sqlUpdate)) {
+                stmtUpdate.setBigDecimal(1, qtd);
+                stmtUpdate.setLong(2, idProduto);
+                stmtUpdate.executeUpdate();
+            }
+
+            // 2. Insere o Histórico de Saída
+            try (PreparedStatement stmtInsert = conn.prepareStatement(sqlInsert)) {
+                stmtInsert.setLong(1, idProduto);
+                stmtInsert.setBigDecimal(2, qtd);
+                stmtInsert.setLong(3, idUsuario);
+                stmtInsert.executeUpdate();
+            }
+
+            conn.commit(); // Salva as duas operações
+            return true;
+        } catch (SQLException e) {
+            if (conn != null) try { conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
+            System.err.println("Erro ao registrar venda: " + e.getMessage());
+            return false;
+        } finally {
+            try { if (conn != null) conn.close(); } catch (SQLException e) { e.printStackTrace(); }
+        }
+    }
+
+    /**
+     * MÉTODO 2: REGISTRAR ENTRADA (Lançamento de Estoque)
+     * Este método será usado no futuro módulo de Compras/Estoque.
+     * Ele garante que a quantidade seja SOMADA à tabela principal.
+     */
+    public boolean registrarEntradaManual(long idProduto, BigDecimal qtd, String motivo, long idUsuario) {
+        // Usamos o operador de soma (+) no SQL
+        String sqlUpdate = "UPDATE TABELA_PRODUTOS SET quantidade_estoque = quantidade_estoque + ? WHERE id = ?";
+        String sqlInsert = "INSERT INTO TABELA_MOVIMENTACOES_ESTOQUE (id_produto, tipo, quantidade, motivo, id_usuario) VALUES (?, 'ENTRADA', ?, ?, ?)";
+
+        Connection conn = null;
+        try {
+            conn = Conexao.getConnection();
+            conn.setAutoCommit(false);
+
+            // 1. Atualiza a Tabela de Produtos (Somando)
+            try (PreparedStatement stmtUpdate = conn.prepareStatement(sqlUpdate)) {
+                stmtUpdate.setBigDecimal(1, qtd);
+                stmtUpdate.setLong(2, idProduto);
+                stmtUpdate.executeUpdate();
+            }
+
+            // 2. Insere o Histórico de Entrada
+            try (PreparedStatement stmtInsert = conn.prepareStatement(sqlInsert)) {
+                stmtInsert.setLong(1, idProduto);
+                stmtInsert.setBigDecimal(2, qtd);
+                stmtInsert.setString(3, motivo);
+                stmtInsert.setLong(4, idUsuario);
+                stmtInsert.executeUpdate();
+            }
+
+            conn.commit();
+            return true;
+        } catch (SQLException e) {
+            if (conn != null) try { conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
+            System.err.println("Erro ao registrar entrada: " + e.getMessage());
+            return false;
+        } finally {
+            try { if (conn != null) conn.close(); } catch (SQLException e) { e.printStackTrace(); }
+        }
+    }
+//======================================================================
 public Produto buscarPorCodigoBarra(String codigoBarra) {
     String sql = "SELECT * FROM TABELA_PRODUTOS WHERE codigo_barra = ?";
 
@@ -191,7 +305,6 @@ public Produto buscarPorCodigoBarra(String codigoBarra) {
 
     return null;
 }
-
 //==========================================
     /**
      * Exclui um produto pelo ID.
