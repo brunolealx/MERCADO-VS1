@@ -1,5 +1,5 @@
 # MERCADO-VS1 🛒  
-Sistema de Gestão de Produtos — Java + Swing + MySQL
+Sistema de Gestão de Produtos — Java + Swing + Postgresql
 
 O **MERCADO-VS1** é uma aplicação desktop desenvolvida em **Java (Swing)**
  para gerenciamento de produtos de mercado.  
@@ -98,8 +98,9 @@ src/main/java/com/creativex/
 ## 🛢️ Banco de Dados
 
 ### 📌 Requisitos
-- MySQL 5.7+ ou MariaDB
-- Driver JDBC (MySQL Connector)
+-Postgresql
+- Driver JDBC para PostgreSQL
+  org.postgresql/<artifactId>postgresql</artifactId>/<version>42.7.2</version>
 
 ### 📌 Script para criar o banco:
 -- 1. CRIAR O BANCO DE DADOS
@@ -255,7 +256,7 @@ Java 21
 
 Swing
 
-MySQL
+PostgreSQL
 
 JDBC
 
