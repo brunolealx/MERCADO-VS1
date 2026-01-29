@@ -4,7 +4,7 @@ Sistema de Gestão de Produtos — Java + Swing + Postgresql
 O **MERCADO-VS1** é uma aplicação desktop desenvolvida em **Java (Swing)**
  para gerenciamento de produtos de mercado.  
 O sistema inicial permite **cadastrar, listar, atualizar produtos**, 
-mantendo os dados em um banco **MySQL**.
+mantendo os dados em um banco **PostgreSQL**.
 Novas funcionalidades estão sendo implementadas gradualmente.
 
 ---
