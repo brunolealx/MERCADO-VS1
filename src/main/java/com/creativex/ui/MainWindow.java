@@ -9,6 +9,7 @@ import com.creativex.ui.clientepj.ClientepjForm;
 import com.creativex.ui.fornecedor.FornecedoresForm;
 import com.creativex.ui.caixas.CaixasForm;
 import com.creativex.ui.ajuda.AjudaForm;
+import com.creativex.util.Sessao;
 //import com.creativex.ui.listagens.ListagensForm;
 
 import javax.swing.*;
@@ -152,7 +153,9 @@ public class MainWindow extends JFrame {
         );
 
         if (resposta == JOptionPane.YES_OPTION) {
+            Sessao.logout();
             System.exit(0);
+
         }
     }
 }

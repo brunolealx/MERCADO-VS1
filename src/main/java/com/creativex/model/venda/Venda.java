@@ -5,42 +5,127 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Venda {
+
     private Long idVenda;
-    private Long idUsuario; // ID do operador que está logado
-    private BigDecimal totalVenda;
+    private Long idUsuario;
+    private Long idCliente;
+
+    private BigDecimal totalBruto = BigDecimal.ZERO;
+    private BigDecimal totalDesconto = BigDecimal.ZERO;
+    private BigDecimal totalLiquido = BigDecimal.ZERO;
+
+    private String status = "CONCLUIDA";
     private String metodoPagamento;
-    private List<ItemVenda> itens;
+    private BigDecimal valorPago;
+    private BigDecimal troco;
 
-    public Venda() {
-        this.itens = new ArrayList<>();
-        this.totalVenda = BigDecimal.ZERO;
-    }
+    private List<ItemVenda> itens = new ArrayList<>();
 
-    // Método utilitário para adicionar item e já atualizar o total
+    // =========================
+    // REGRAS DE NEGÓCIO
+    // =========================
     public void adicionarItem(ItemVenda item) {
-        this.itens.add(item);
-        calcularTotal();
+        itens.add(item);
+        recalcularTotais();
     }
 
-    public void calcularTotal() {
-        this.totalVenda = itens.stream()
+    public void recalcularTotais() {
+        totalBruto = itens.stream()
                 .map(ItemVenda::getSubtotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        totalLiquido = totalBruto.subtract(totalDesconto);
     }
 
-    // Getters e Setters
-    public Long getIdVenda() { return idVenda; }
-    public void setIdVenda(Long idVenda) { this.idVenda = idVenda; }
+    // =========================
+    // GETTERS E SETTERS
+    // =========================
+    public Long getIdVenda() {
+        return idVenda;
+    }
 
-    public Long getIdUsuario() { return idUsuario; }
-    public void setIdUsuario(Long idUsuario) { this.idUsuario = idUsuario; }
+    public void setIdVenda(Long idVenda) {
+        this.idVenda = idVenda;
+    }
 
-    public BigDecimal getTotalVenda() { return totalVenda; }
-    public void setTotalVenda(BigDecimal totalVenda) { this.totalVenda = totalVenda; }
+    public Long getIdUsuario() {
+        return idUsuario;
+    }
 
-    public String getMetodoPagamento() { return metodoPagamento; }
-    public void setMetodoPagamento(String metodoPagamento) { this.metodoPagamento = metodoPagamento; }
+    public void setIdUsuario(Long idUsuario) {
+        this.idUsuario = idUsuario;
+    }
 
-    public List<ItemVenda> getItens() { return itens; }
-    public void setItens(List<ItemVenda> itens) { this.itens = itens; }
+    public Long getIdCliente() {
+        return idCliente;
+    }
+
+    public void setIdCliente(Long idCliente) {
+        this.idCliente = idCliente;
+    }
+
+    public BigDecimal getTotalBruto() {
+        return totalBruto;
+    }
+
+    public void setTotalBruto(BigDecimal totalBruto) {
+        this.totalBruto = totalBruto;
+    }
+
+    public BigDecimal getTotalDesconto() {
+        return totalDesconto;
+    }
+
+    public void setTotalDesconto(BigDecimal totalDesconto) {
+        this.totalDesconto = totalDesconto;
+    }
+
+    public BigDecimal getTotalLiquido() {
+        return totalLiquido;
+    }
+
+    public void setTotalLiquido(BigDecimal totalLiquido) {
+        this.totalLiquido = totalLiquido;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getMetodoPagamento() {
+        return metodoPagamento;
+    }
+
+    public void setMetodoPagamento(String metodoPagamento) {
+        this.metodoPagamento = metodoPagamento;
+    }
+
+    public BigDecimal getValorPago() {
+        return valorPago;
+    }
+
+    public void setValorPago(BigDecimal valorPago) {
+        this.valorPago = valorPago;
+    }
+
+    public BigDecimal getTroco() {
+        return troco;
+    }
+
+    public void setTroco(BigDecimal troco) {
+        this.troco = troco;
+    }
+
+    public List<ItemVenda> getItens() {
+        return itens;
+    }
+
+    public void setItens(List<ItemVenda> itens) {
+        this.itens = itens;
+        recalcularTotais();
+    }
 }

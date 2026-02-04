@@ -65,6 +65,8 @@ CREATE TABLE tabela_produtos (
     loja VARCHAR(50) DEFAULT 'Sede'
 );
 
+CREATE INDEX idx_produto_cod_barra ON tabela_produtos(codigo_barra);
+
 -- 4. tabela_CLIENTES (Sem alterações)
 CREATE TABLE tabela_clientes (
     id BIGSERIAL PRIMARY KEY,
@@ -103,37 +105,80 @@ CREATE TABLE tabela_clientes_pj (
     data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 6. tabela_VENDAS (Sem alterações)
+DROP TABLE IF EXISTS tabela_itens_venda CASCADE;
+DROP TABLE IF EXISTS tabela_movimentacoes_estoque CASCADE;
+DROP TABLE IF EXISTS tabela_vendas CASCADE;
+
+-- ==========================================================
+-- 4. VENDAS E PDV (ESTRUTURA PROFISSIONAL)
+-- ==========================================================
 CREATE TABLE tabela_vendas (
     id_venda BIGSERIAL PRIMARY KEY,
     data_venda TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     id_usuario BIGINT NOT NULL,
-    total_venda DECIMAL(10,2) NOT NULL,
+    id_cliente BIGINT,
+    
+    total_bruto DECIMAL(10,2) NOT NULL,
+    total_desconto DECIMAL(10,2) DEFAULT 0.00,
+    total_liquido DECIMAL(10,2) NOT NULL,
+    
+    status VARCHAR(20) DEFAULT 'CONCLUIDA',
     metodo_pagamento VARCHAR(50),
-    CONSTRAINT fk_usuario_venda FOREIGN KEY (id_usuario) REFERENCES tabela_USUARIOS(id)
+    valor_pago DECIMAL(10,2),
+    troco DECIMAL(10,2),
+    chave_nfe VARCHAR(44),
+
+    CONSTRAINT fk_usuario_venda FOREIGN KEY (id_usuario) REFERENCES tabela_usuarios(id),
+    CONSTRAINT fk_cliente_venda FOREIGN KEY (id_cliente) REFERENCES tabela_clientes(id)
 );
 
--- 7. tabela_ITENS_VENDA
+-- ==========================================================
+-- ITENS DA VENDA
+-- ==========================================================
 CREATE TABLE tabela_itens_venda (
     id_item BIGSERIAL PRIMARY KEY,
     id_venda BIGINT NOT NULL,
     id_produto BIGINT NOT NULL,
+    
     quantidade DECIMAL(10,3) NOT NULL,
     preco_unitario DECIMAL(10,2) NOT NULL,
+    desconto_item DECIMAL(10,2) DEFAULT 0.00,
     subtotal DECIMAL(10,2) NOT NULL,
-    CONSTRAINT fk_venda_item FOREIGN KEY (id_venda) REFERENCES tabela_VENDAS(id_venda) ON DELETE CASCADE,
-    CONSTRAINT fk_produto_item FOREIGN KEY (id_produto) REFERENCES tabela_PRODUTOS(id)
+    
+    preco_custo_momento DECIMAL(10,2),
+    cst_fiscal_momento VARCHAR(3),
+
+    CONSTRAINT fk_venda_item FOREIGN KEY (id_venda)
+        REFERENCES tabela_vendas(id_venda) ON DELETE CASCADE,
+    CONSTRAINT fk_produto_item FOREIGN KEY (id_produto)
+        REFERENCES tabela_produtos(id)
 );
 
--- 8. tabela_movimentacoes_estoque (Alterado tipo_movimentacao para VARCHAR)
+-- ==========================================================
+-- MOVIMENTAÇÕES DE ESTOQUE
+-- ==========================================================
 CREATE TABLE tabela_movimentacoes_estoque (
-    id SERIAL PRIMARY KEY,
-    id_produto BIGINT NOT NULL, 
-    tipo VARCHAR(20) NOT NULL, -- Alterado para VARCHAR
-    quantidade DECIMAL(10,2) NOT NULL,
+    id BIGSERIAL PRIMARY KEY,
+    id_produto BIGINT NOT NULL,
+    tipo VARCHAR(20) NOT NULL,
+    quantidade DECIMAL(10,3) NOT NULL,
+
+    saldo_anterior DECIMAL(10,3),
+    saldo_posterior DECIMAL(10,3),
+
     motivo VARCHAR(255),
     id_usuario BIGINT,
+    id_venda_origem BIGINT,
     data_movimentacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_produto_mov FOREIGN KEY (id_produto) REFERENCES tabela_PRODUTOS(id),
-    CONSTRAINT fk_usuario_mov FOREIGN KEY (id_usuario) REFERENCES tabela_USUARIOS(id)
+
+    CONSTRAINT fk_produto_mov FOREIGN KEY (id_produto) REFERENCES tabela_produtos(id),
+    CONSTRAINT fk_usuario_mov FOREIGN KEY (id_usuario) REFERENCES tabela_usuarios(id),
+    CONSTRAINT fk_venda_mov FOREIGN KEY (id_venda_origem) REFERENCES tabela_vendas(id_venda)
 );
+
+-- ==========================================================
+-- ÍNDICES
+-- ==========================================================
+CREATE INDEX idx_venda_data ON tabela_vendas(data_venda);
+CREATE INDEX idx_movimentacao_produto ON tabela_movimentacoes_estoque(id_produto);
+

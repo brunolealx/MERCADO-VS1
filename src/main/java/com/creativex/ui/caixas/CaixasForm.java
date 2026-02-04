@@ -5,7 +5,7 @@ import com.creativex.model.venda.Venda;
 import com.creativex.model.produto.Produto;
 import com.creativex.dao.produto.ProdutoDAO;
 import com.creativex.dao.caixa.VendaDAO;
-
+import com.creativex.util.Sessao;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
@@ -36,6 +36,10 @@ public class CaixasForm extends JPanel {
 
     private void initComponents() {
         // --- TOPO: ENTRADA ---
+        JLabel lblOperador = new JLabel(
+                "Operador: " + Sessao.getUsuarioLogado().getNome()
+        );
+
         JPanel pnlTopo = new JPanel(new GridLayout(1, 4, 10, 10));
         txtCodigoBarras = new JTextField();
         txtCodigoBarras.setFont(new Font("SansSerif", Font.BOLD, 18));
@@ -110,8 +114,17 @@ public class CaixasForm extends JPanel {
             Produto p = produtoDAO.buscarPorCodigoOuId(filtro);
 
             if (p != null) {
-                ItemVenda item = new ItemVenda(p.getId(), p.getDescricao(), qtd, p.getPrecoVenda());
-                vendaAtual.adicionarItem(item);
+				ItemVenda item = new ItemVenda(
+				p.getId(),
+				p.getDescricao(),
+				qtd,
+				p.getPrecoVenda() );
+		// snapshots obrigatórios (nova modelagem)
+				item.setPrecoCustoMomento(p.getPrecoCusto());
+				item.setCstFiscalMomento(p.getCstIcms());
+
+		// ADICIONA NO MODEL
+				vendaAtual.adicionarItem(item);
 
                 modelCarrinho.addRow(new Object[]{
                         modelCarrinho.getRowCount() + 1,
@@ -141,14 +154,17 @@ public class CaixasForm extends JPanel {
         }
 
         Window parentWindow = SwingUtilities.getWindowAncestor(this);
-        FinalizarVendaDialog dialog = new FinalizarVendaDialog((Frame) parentWindow, vendaAtual.getTotalVenda());
+        FinalizarVendaDialog dialog = new FinalizarVendaDialog( (Frame) parentWindow, vendaAtual.getTotalLiquido());
+
         dialog.setVisible(true);
 
         if (dialog.isVendaConfirmada()) {
             try {
                 vendaAtual.setMetodoPagamento(dialog.getMetodoSelecionado());
-                vendaAtual.setIdUsuario(1L); // ID fixo temporário
 
+                vendaAtual.setIdUsuario(
+                        Sessao.getUsuarioLogado().getId()
+                );
                 vendaDAO.finalizarVenda(vendaAtual);
 
                 JOptionPane.showMessageDialog(this, "Venda concluída com sucesso!");
@@ -171,7 +187,7 @@ public class CaixasForm extends JPanel {
             modelCarrinho.removeRow(row);
 
             // 3. Recalcula o total
-            vendaAtual.calcularTotal();
+            vendaAtual.recalcularTotais();
             atualizarExibicaoTotal();
 
             // 4. Reorganiza os números da coluna "Item" (1, 2, 3...)
@@ -186,8 +202,10 @@ public class CaixasForm extends JPanel {
     }
 
     private void atualizarExibicaoTotal() {
-        vendaAtual.calcularTotal(); // Garante que o total está atualizado no objeto
-        txtTotalVenda.setText(nf.format(vendaAtual.getTotalVenda()));
+        vendaAtual.recalcularTotais();
+        txtTotalVenda.setText(
+                nf.format(vendaAtual.getTotalLiquido())
+        );
     }
 
     private void limparCamposInput() {

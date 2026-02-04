@@ -2,6 +2,8 @@ package com.creativex.ui.login;
 
 import com.creativex.dao.usuario.UsuarioDAO;
 import com.creativex.model.usuario.Usuario;
+import com.creativex.ui.MainWindow;
+import com.creativex.util.Sessao;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -34,7 +36,7 @@ public class LoginForm extends JFrame {
 
         // Ação do Botão
         btnEntrar.addActionListener(this::efetuarLogin);
-        
+
         // Permite dar Enter para logar
         getRootPane().setDefaultButton(btnEntrar);
     }
@@ -49,23 +51,21 @@ public class LoginForm extends JFrame {
         }
 
         // Chama o DAO que criamos anteriormente
-        Usuario usuario = usuarioDAO.autenticar(login, senha);
+        UsuarioDAO usuarioDAO = new UsuarioDAO();
+
+        Usuario usuario = usuarioDAO.autenticar(
+                txtLogin.getText(),
+                new String(txtSenha.getPassword())
+        );
 
         if (usuario != null) {
-            // // Guarda o utilizador na sessão global
-            com.creativex.util.Sessao.usuarioLogado = usuario;
-
-            JOptionPane.showMessageDialog(this, "Bem-vindo, " + usuario.getNome() + "!");
-
-            // Fecha o Login e abre o Menu Principal
-            this.dispose();
-            new com.creativex.ui.MainWindow().setVisible(true);
-
+            Sessao.login(usuario);          // 🔥 aqui está o ponto-chave
+            new MainWindow().setVisible(true);
+            dispose();
         } else {
-            JOptionPane.showMessageDialog(this, "Usuário ou senha inválidos!", "Erro", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Login ou senha inválidos.");
         }
     }
-
     public static void main(String[] args) {
         // Para testar o formulário isoladamente
         SwingUtilities.invokeLater(() -> new LoginForm().setVisible(true));
