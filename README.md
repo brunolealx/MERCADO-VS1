@@ -22,7 +22,7 @@ Novas funcionalidades estão sendo implementadas gradualmente.
 - ✔️ Configuração de impressoaras
 - ✔️ Interface moderna em Swing  
 - ✔️ Arquitetura organizada (MVC simplificado)  
-- ✔️ Conexão MySQL centralizada
+- ✔️ Conexão PostgeSQL centralizada
 
 ---
 
