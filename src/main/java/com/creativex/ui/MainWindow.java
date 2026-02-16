@@ -2,6 +2,7 @@
 //creativex sistemas
 package com.creativex.ui;
 import com.creativex.ui.cadastrousuario.CadastroUsuarioForm;
+import com.creativex.ui.caixas.VendasConsultaForm;
 import com.creativex.ui.produtos.ProdutoForm;
 import com.creativex.ui.estoque.EstoqueForm;
 import com.creativex.ui.clientes.ClientesForm;
@@ -81,6 +82,7 @@ public class MainWindow extends JFrame {
         JButton btnFornecedores = new JButton("Fornecedores");
         JButton btnUsuarios = new JButton("Usuarios");
         JButton btnCaixas       = new JButton("Caixas");
+        JButton btnConsultaVendas = new JButton("Consulta Vendas");
         JButton btnImpressoras  = new JButton("Impressoras");
         JButton btnAjuda        = new JButton("Ajuda");
         JButton btnSairSistema  = new JButton("Sair do sistema");
@@ -92,6 +94,7 @@ public class MainWindow extends JFrame {
         menu.add(btnFornecedores);
         menu.add(btnUsuarios);
         menu.add(btnCaixas);
+        menu.add(btnConsultaVendas);
         menu.add(btnImpressoras);
         menu.add(btnAjuda);
         menu.add(btnSairSistema);
@@ -105,7 +108,10 @@ public class MainWindow extends JFrame {
         btnFornecedores.addActionListener(e -> abrirModulo(new FornecedoresForm()));
         btnUsuarios.addActionListener(e -> abrirModulo(new CadastroUsuarioForm()));
         btnCaixas.addActionListener(e -> abrirModulo(new CaixasForm()));
-        btnCaixas.addActionListener(e -> abrirModulo(new CaixasForm()));
+        btnConsultaVendas.addActionListener(
+                e -> abrirModulo(new VendasConsultaForm())
+        );
+
         btnImpressoras.addActionListener(e ->
                 JOptionPane.showMessageDialog(this, "Módulo Impressoras em desenvolvimento"));
         btnAjuda.addActionListener(e -> abrirModulo(new AjudaForm()));

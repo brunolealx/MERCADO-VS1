@@ -112,13 +112,27 @@ public class CaixasForm extends JPanel {
 
         try {
             Produto p = produtoDAO.buscarPorCodigoOuId(filtro);
-
             if (p != null) {
-				ItemVenda item = new ItemVenda(
-				p.getId(),
-				p.getDescricao(),
-				qtd,
-				p.getPrecoVenda() );
+
+                // 🔴 VALIDAÇÃO DE ESTOQUE (INSERIR AQUI)
+                if (p.getQuantidadeEstoque().compareTo(qtd) < 0) {
+                    JOptionPane.showMessageDialog(
+                            this,
+                            "Estoque insuficiente!\nDisponível: " + p.getQuantidadeEstoque(),
+                            "Atenção",
+                            JOptionPane.WARNING_MESSAGE
+                    );
+                    return;
+                }
+
+                // Criação do item somente se houver estoque
+                ItemVenda item = new ItemVenda(
+                        p.getId(),
+                        p.getDescricao(),
+                        qtd,
+                        p.getPrecoVenda()
+                );
+
 		// snapshots obrigatórios (nova modelagem)
 				item.setPrecoCustoMomento(p.getPrecoCusto());
 				item.setCstFiscalMomento(p.getCstIcms());
@@ -166,6 +180,8 @@ public class CaixasForm extends JPanel {
                         Sessao.getUsuarioLogado().getId()
                 );
                 vendaDAO.finalizarVenda(vendaAtual);
+                vendaAtual.setValorPago(dialog.getValorPago());
+                vendaAtual.setTroco(dialog.getTroco());
 
                 JOptionPane.showMessageDialog(this, "Venda concluída com sucesso!");
                 limparVenda();

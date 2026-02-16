@@ -154,7 +154,8 @@ public class ProdutoDAO {
     //Busca por Codigo de barras  ou id usado no CaixasForm
     public Produto buscarPorCodigoOuId(String filtro) throws SQLException {
         // Removida a coluna 'ativo' que não existe no seu banco
-        String sql = "SELECT id, descricao, preco_venda FROM tabela_produtos " +
+        String sql = "SELECT id, descricao, preco_venda, quantidade_estoque, preco_custo, cst_icms\n" +
+                "FROM tabela_produtos\n" +
                 "WHERE id = ? OR codigo_barra = ?";
 
         try (Connection conn = Conexao.getConnection();
@@ -179,6 +180,10 @@ public class ProdutoDAO {
                     p.setId(rs.getLong("id"));
                     p.setDescricao(rs.getString("descricao"));
                     p.setPrecoVenda(rs.getBigDecimal("preco_venda"));
+                    p.setQuantidadeEstoque(rs.getBigDecimal("quantidade_estoque"));
+                    p.setPrecoCusto(rs.getBigDecimal("preco_custo"));
+                    p.setCstIcms(rs.getString("cst_icms"));
+
                     return p;
                 }
             }

@@ -60,7 +60,9 @@ public class VendaDAO {
                 ps.setBigDecimal(8, venda.getTroco());
 
                 ResultSet rs = ps.executeQuery();
-                rs.next();
+                if (!rs.next()) {
+                    throw new SQLException("Erro ao gerar ID da venda.");
+                }
                 idVenda = rs.getLong("id_venda");
             }
 
@@ -122,4 +124,102 @@ public class VendaDAO {
             conn.close();
         }
     }
+
+    //
+    // Cancelamento de venda
+    //
+    public void cancelarVenda(long idVenda, long idUsuario) throws SQLException {
+
+        String sqlBuscaItens = """
+        SELECT id_produto, quantidade
+        FROM tabela_itens_venda
+        WHERE id_venda = ?
+    """;
+
+        String sqlAtualizaStatus = """
+        UPDATE tabela_vendas
+        SET status = 'CANCELADA'
+        WHERE id_venda = ?
+    """;
+
+        String sqlSaldoAtual =
+                "SELECT quantidade_estoque FROM tabela_produtos WHERE id = ? FOR UPDATE";
+
+        String sqlAtualizaEstoque =
+                "UPDATE tabela_produtos SET quantidade_estoque = quantidade_estoque + ? WHERE id = ?";
+
+        String sqlMov = """
+        INSERT INTO tabela_movimentacoes_estoque
+        (id_produto, tipo, quantidade,
+         saldo_anterior, saldo_posterior,
+         motivo, id_usuario, id_venda_origem)
+        VALUES (?, 'ENTRADA', ?, ?, ?, 'ESTORNO VENDA', ?, ?)
+    """;
+
+        Connection conn = Conexao.getConnection();
+
+        try {
+            conn.setAutoCommit(false);
+
+            // 1️⃣ Atualiza status
+            try (PreparedStatement ps = conn.prepareStatement(sqlAtualizaStatus)) {
+                ps.setLong(1, idVenda);
+                ps.executeUpdate();
+            }
+
+            // 2️⃣ Busca itens da venda
+            try (PreparedStatement psItens = conn.prepareStatement(sqlBuscaItens)) {
+                psItens.setLong(1, idVenda);
+
+                ResultSet rsItens = psItens.executeQuery();
+
+                while (rsItens.next()) {
+
+                    long idProduto = rsItens.getLong("id_produto");
+                    BigDecimal qtd = rsItens.getBigDecimal("quantidade");
+
+                    BigDecimal saldoAnterior;
+
+                    // 🔒 Lock do produto
+                    try (PreparedStatement psSaldo = conn.prepareStatement(sqlSaldoAtual)) {
+                        psSaldo.setLong(1, idProduto);
+                        ResultSet rs = psSaldo.executeQuery();
+                        rs.next();
+                        saldoAnterior = rs.getBigDecimal("quantidade_estoque");
+                    }
+
+                    BigDecimal saldoPosterior = saldoAnterior.add(qtd);
+
+                    // 3️⃣ Devolve estoque
+                    try (PreparedStatement psEstoque = conn.prepareStatement(sqlAtualizaEstoque)) {
+                        psEstoque.setBigDecimal(1, qtd);
+                        psEstoque.setLong(2, idProduto);
+                        psEstoque.executeUpdate();
+                    }
+
+                    // 4️⃣ Registra movimentação reversa
+                    try (PreparedStatement psMov = conn.prepareStatement(sqlMov)) {
+                        psMov.setLong(1, idProduto);
+                        psMov.setBigDecimal(2, qtd);
+                        psMov.setBigDecimal(3, saldoAnterior);
+                        psMov.setBigDecimal(4, saldoPosterior);
+                        psMov.setLong(5, idUsuario);
+                        psMov.setLong(6, idVenda);
+                        psMov.executeUpdate();
+                    }
+                }
+            }
+
+            conn.commit();
+
+        } catch (SQLException e) {
+            conn.rollback();
+            throw e;
+        } finally {
+            conn.setAutoCommit(true);
+            conn.close();
+        }
+    }
+
+
 }
