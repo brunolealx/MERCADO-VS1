@@ -6,6 +6,8 @@ import com.creativex.model.produto.Produto;
 import com.creativex.dao.produto.ProdutoDAO;
 import com.creativex.dao.caixa.VendaDAO;
 import com.creativex.util.Sessao;
+import com.creativex.ui.HomeScreen;
+import com.creativex.ui.MainWindow;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
@@ -19,17 +21,27 @@ public class CaixasForm extends JPanel {
     private JTextField txtCodigoBarras, txtQuantidade, txtTotalVenda;
     private JTable tableCarrinho;
     private DefaultTableModel modelCarrinho;
-    private JButton btnFinalizar, btnRemoverItem;
+    private JButton btnFinalizar, btnRemoverItem, btnVoltar;
 
     // Objetos de controle
     private Venda vendaAtual = new Venda();
     private final ProdutoDAO produtoDAO = new ProdutoDAO();
     private final VendaDAO vendaDAO = new VendaDAO();
     private final NumberFormat nf = NumberFormat.getCurrencyInstance(new Locale("pt", "BR"));
+    private MainWindow mainWindow;
 
     public CaixasForm() {
         setLayout(new BorderLayout(15, 15));
         setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        this.mainWindow = (MainWindow) SwingUtilities.getWindowAncestor(this);
+        initComponents();
+        configurarAtalhos();
+    }
+    
+    public CaixasForm(MainWindow mainWindow) {
+        setLayout(new BorderLayout(15, 15));
+        setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        this.mainWindow = mainWindow;
         initComponents();
         configurarAtalhos();
     }
@@ -76,6 +88,8 @@ public class CaixasForm extends JPanel {
         btnFinalizar.setFont(new Font("SansSerif", Font.BOLD, 16));
 
         btnRemoverItem = new JButton("Remover Item (DEL)");
+        
+        btnVoltar = new JButton("Voltar");
 
         pnlAcoes.add(new JLabel("TOTAL DA VENDA:"));
         pnlAcoes.add(txtTotalVenda);
@@ -83,6 +97,8 @@ public class CaixasForm extends JPanel {
         pnlAcoes.add(btnFinalizar);
         pnlAcoes.add(Box.createRigidArea(new Dimension(0, 10)));
         pnlAcoes.add(btnRemoverItem);
+        pnlAcoes.add(Box.createRigidArea(new Dimension(0, 10)));
+        pnlAcoes.add(btnVoltar);
 
         add(pnlTopo, BorderLayout.NORTH);
         add(new JScrollPane(tableCarrinho), BorderLayout.CENTER);
@@ -95,6 +111,13 @@ public class CaixasForm extends JPanel {
         txtCodigoBarras.addActionListener(e -> adicionarProdutoPeloCodigo());
         btnFinalizar.addActionListener(e -> finalizarVenda());
         btnRemoverItem.addActionListener(e -> removerItemSelecionado());
+        btnVoltar.addActionListener(e -> voltarParaHome());
+    }
+    
+    private void voltarParaHome() {
+        if (mainWindow != null) {
+            mainWindow.abrirModulo(new HomeScreen());
+        }
     }
 
     private void adicionarProdutoPeloCodigo() {

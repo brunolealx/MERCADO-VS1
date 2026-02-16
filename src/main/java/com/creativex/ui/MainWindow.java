@@ -107,9 +107,9 @@ public class MainWindow extends JFrame {
 
         btnFornecedores.addActionListener(e -> abrirModulo(new FornecedoresForm()));
         btnUsuarios.addActionListener(e -> abrirModulo(new CadastroUsuarioForm()));
-        btnCaixas.addActionListener(e -> abrirModulo(new CaixasForm()));
+        btnCaixas.addActionListener(e -> abrirModulo(new CaixasForm(this)));
         btnConsultaVendas.addActionListener(
-                e -> abrirModulo(new VendasConsultaForm())
+                e -> abrirModulo(new VendasConsultaForm(this))
         );
 
         btnImpressoras.addActionListener(e ->

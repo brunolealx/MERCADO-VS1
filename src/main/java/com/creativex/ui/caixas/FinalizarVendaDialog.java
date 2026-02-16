@@ -12,7 +12,7 @@ public class FinalizarVendaDialog extends JDialog {
     private JTextField txtValorPago;
     private JLabel lblTotal, lblTroco;
 
-    private JButton btnConfirmar, btnCancelar;
+    private JButton btnConfirmar, btnCancelar, btnVoltarAoCarrinho;
 
     private boolean vendaConfirmada = false;
     private String metodoSelecionado;
@@ -75,10 +75,13 @@ public class FinalizarVendaDialog extends JDialog {
         JPanel pnlBotoes = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         btnConfirmar = new JButton("Confirmar");
         btnCancelar = new JButton("Cancelar");
+        btnVoltarAoCarrinho = new JButton("Voltar ao Carrinho");
 
         btnConfirmar.addActionListener(e -> confirmarVenda());
         btnCancelar.addActionListener(e -> dispose());
+        btnVoltarAoCarrinho.addActionListener(e -> dispose());
 
+        pnlBotoes.add(btnVoltarAoCarrinho);
         pnlBotoes.add(btnCancelar);
         pnlBotoes.add(btnConfirmar);
 

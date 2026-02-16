@@ -4,6 +4,8 @@ package com.creativex.ui.caixas;
 import com.creativex.dao.caixa.VendaDAO;
 import com.creativex.db.Conexao;
 import com.creativex.util.Sessao;
+import com.creativex.ui.HomeScreen;
+import com.creativex.ui.MainWindow;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -16,25 +18,43 @@ public class VendasConsultaForm extends JPanel {
 
     private JTable tabela;
     private DefaultTableModel model;
-    private JButton btnCancelar;
+    private JButton btnCancelar, btnVoltar;
+    private MainWindow mainWindow;
 
     private final NumberFormat nf =
             NumberFormat.getCurrencyInstance(new Locale("pt", "BR"));
 
     public VendasConsultaForm() {
         setLayout(new BorderLayout(10, 10));
+        this.mainWindow = (MainWindow) SwingUtilities.getWindowAncestor(this);
+        initComponents();
+        carregarVendas();
+        configurarEventos();
+    }
+    
+    public VendasConsultaForm(MainWindow mainWindow) {
+        setLayout(new BorderLayout(10, 10));
+        this.mainWindow = mainWindow;
+        initComponents();
+        carregarVendas();
+        configurarEventos();
+    }
 
+    private void initComponents() {
         model = new DefaultTableModel(
                 new String[]{"ID", "Data", "Operador", "Total", "Status"}, 0);
 
         tabela = new JTable(model);
         add(new JScrollPane(tabela), BorderLayout.CENTER);
 
+        JPanel pnlBotoes = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         btnCancelar = new JButton("Cancelar Venda");
-        add(btnCancelar, BorderLayout.SOUTH);
-
-        carregarVendas();
-        configurarEventos();
+        btnVoltar = new JButton("Voltar");
+        
+        pnlBotoes.add(btnCancelar);
+        pnlBotoes.add(btnVoltar);
+        
+        add(pnlBotoes, BorderLayout.SOUTH);
     }
 
     private void carregarVendas() {
@@ -73,6 +93,13 @@ public class VendasConsultaForm extends JPanel {
     private void configurarEventos() {
 
         btnCancelar.addActionListener(e -> cancelarVenda());
+        btnVoltar.addActionListener(e -> voltarParaHome());
+    }
+    
+    private void voltarParaHome() {
+        if (mainWindow != null) {
+            mainWindow.abrirModulo(new HomeScreen());
+        }
     }
 
     private void cancelarVenda() {
