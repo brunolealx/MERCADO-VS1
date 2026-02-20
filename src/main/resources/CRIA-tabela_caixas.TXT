@@ -1,0 +1,75 @@
+-- ==========================================================
+-- TABELA DE CONTROLE DE CAIXAS
+-- ==========================================================
+
+CREATE TABLE IF NOT EXISTS tabela_caixas (
+    id BIGSERIAL PRIMARY KEY,
+
+    id_usuario BIGINT NOT NULL,
+
+    data_abertura TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    data_fechamento TIMESTAMP,
+
+    saldo_inicial DECIMAL(12,2) NOT NULL,
+    saldo_final DECIMAL(12,2),
+
+    total_dinheiro DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+    total_credito  DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+    total_debito   DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+    total_pix      DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+
+    total_vendas DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+
+    saldo_esperado DECIMAL(12,2),
+    discrepancia   DECIMAL(12,2),
+
+    status VARCHAR(20) NOT NULL DEFAULT 'ABERTO',
+
+    observacoes TEXT,
+
+    CONSTRAINT fk_usuario_caixa
+        FOREIGN KEY (id_usuario)
+        REFERENCES tabela_usuarios(id)
+        ON DELETE RESTRICT,
+
+    CONSTRAINT chk_status_caixa
+        CHECK (status IN ('ABERTO', 'FECHADO'))
+);
+
+-- ==========================================================
+-- GARANTE APENAS UM CAIXA ABERTO POR USUÁRIO
+-- ==========================================================
+
+CREATE UNIQUE INDEX IF NOT EXISTS unico_caixa_aberto
+ON tabela_caixas(id_usuario)
+WHERE status = 'ABERTO';
+
+-- ==========================================================
+-- ÍNDICES AUXILIARES
+-- ==========================================================
+
+CREATE INDEX IF NOT EXISTS idx_caixa_usuario
+ON tabela_caixas(id_usuario);
+
+CREATE INDEX IF NOT EXISTS idx_caixa_status
+ON tabela_caixas(status);
+
+CREATE INDEX IF NOT EXISTS idx_caixa_data_abertura
+ON tabela_caixas(data_abertura);
+
+
+-- ==========================================================
+-- MUDANÇAS FEITAS NA TABELA tabela_vendas.
+-- =========================================================
+
+
+Isso é obrigatório para integração:
+
+ALTER TABLE tabela_vendas
+ADD COLUMN IF NOT EXISTS id_caixa BIGINT;
+
+ALTER TABLE tabela_vendas
+ADD CONSTRAINT fk_venda_caixa
+FOREIGN KEY (id_caixa)
+REFERENCES tabela_caixas(id)
+ON DELETE RESTRICT;

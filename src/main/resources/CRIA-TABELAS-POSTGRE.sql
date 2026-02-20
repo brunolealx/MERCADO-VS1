@@ -110,7 +110,7 @@ DROP TABLE IF EXISTS tabela_movimentacoes_estoque CASCADE;
 DROP TABLE IF EXISTS tabela_vendas CASCADE;
 
 -- ==========================================================
--- 4. VENDAS E PDV (ESTRUTURA PROFISSIONAL)
+-- 6. VENDAS E PDV (ESTRUTURA PROFISSIONAL)
 -- ==========================================================
 CREATE TABLE tabela_vendas (
     id_venda BIGSERIAL PRIMARY KEY,
@@ -133,7 +133,7 @@ CREATE TABLE tabela_vendas (
 );
 
 -- ==========================================================
--- ITENS DA VENDA
+-- 7-ITENS DA VENDA
 -- ==========================================================
 CREATE TABLE tabela_itens_venda (
     id_item BIGSERIAL PRIMARY KEY,
@@ -155,7 +155,7 @@ CREATE TABLE tabela_itens_venda (
 );
 
 -- ==========================================================
--- MOVIMENTAÇÕES DE ESTOQUE
+-- 8-MOVIMENTAÇÕES DE ESTOQUE
 -- ==========================================================
 CREATE TABLE tabela_movimentacoes_estoque (
     id BIGSERIAL PRIMARY KEY,
