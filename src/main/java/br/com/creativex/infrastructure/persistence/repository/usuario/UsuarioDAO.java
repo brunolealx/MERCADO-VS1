@@ -8,6 +8,8 @@ package br.com.creativex.infrastructure.persistence.repository.usuario;
 
 import br.com.creativex.db.Conexao;
 import br.com.creativex.domain.entity.usuario.Usuario;
+import org.mindrot.jbcrypt.BCrypt;
+
 import java.sql.*;
 
 public class UsuarioDAO {
@@ -21,7 +23,7 @@ public class UsuarioDAO {
 
             stmt.setString(1, usuario.getNome());
             stmt.setString(2, usuario.getLogin());
-            stmt.setString(3, usuario.getSenha());
+            stmt.setString(3, prepararSenhaParaSalvar(usuario.getSenha()));
             stmt.setString(4, usuario.getPerfil());
             stmt.setBoolean(5, true);
 
@@ -34,16 +36,15 @@ public class UsuarioDAO {
 
     // 2. Autenticação usando tabela_usuarios
     public Usuario autenticar(String login, String senha) {
-        String sql = "SELECT * FROM tabela_usuarios WHERE login = ? AND senha = ? AND ativo = TRUE";
+        String sql = "SELECT * FROM tabela_usuarios WHERE login = ? AND ativo = TRUE";
 
         try (Connection conn = Conexao.getConnection(); //
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, login);
-            stmt.setString(2, senha);
             ResultSet rs = stmt.executeQuery();
 
-            if (rs.next()) {
+            if (rs.next() && senhaConfere(senha, rs.getString("senha"))) {
                 Usuario user = new Usuario();
                 user.setId(rs.getLong("id"));
                 user.setNome(rs.getString("nome"));
@@ -71,5 +72,39 @@ public class UsuarioDAO {
             e.printStackTrace();
         }
         return false;
+    }
+
+    private String prepararSenhaParaSalvar(String senha) {
+        if (senha == null || senha.isBlank()) {
+            throw new IllegalArgumentException("Senha não informada.");
+        }
+
+        return isHashBCrypt(senha) ? senha : BCrypt.hashpw(senha, BCrypt.gensalt());
+    }
+
+    private boolean senhaConfere(String senhaInformada, String senhaArmazenada) {
+        if (senhaInformada == null || senhaArmazenada == null) {
+            return false;
+        }
+
+        if (isHashBCrypt(senhaArmazenada)) {
+            return BCrypt.checkpw(senhaInformada, normalizarHashBCrypt(senhaArmazenada));
+        }
+
+        // Compatibilidade com usuarios cadastrados antes do uso de BCrypt.
+        return senhaArmazenada.equals(senhaInformada);
+    }
+
+    private boolean isHashBCrypt(String senha) {
+        return senha != null
+                && (senha.startsWith("$2a$") || senha.startsWith("$2b$") || senha.startsWith("$2y$"));
+    }
+
+    private String normalizarHashBCrypt(String senha) {
+        if (senha.startsWith("$2b$") || senha.startsWith("$2y$")) {
+            return "$2a$" + senha.substring(4);
+        }
+
+        return senha;
     }
 }

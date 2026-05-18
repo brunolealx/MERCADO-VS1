@@ -172,6 +172,13 @@ public class VendaDAO {
     //
     public void cancelarVenda(long idVenda, long idUsuario) throws SQLException {
 
+        String sqlBuscaVenda = """
+            SELECT status
+            FROM tabela_vendas
+            WHERE id_venda = ?
+            FOR UPDATE
+        """;
+
         String sqlBuscaItens = """
             SELECT id_produto, quantidade
             FROM tabela_itens_venda
@@ -203,10 +210,27 @@ public class VendaDAO {
         try {
             conn.setAutoCommit(false);
 
+            try (PreparedStatement ps = conn.prepareStatement(sqlBuscaVenda)) {
+                ps.setLong(1, idVenda);
+                ResultSet rs = ps.executeQuery();
+
+                if (!rs.next()) {
+                    throw new SQLException("Venda não encontrada.");
+                }
+
+                String statusAtual = rs.getString("status");
+                if ("CANCELADA".equalsIgnoreCase(statusAtual)) {
+                    throw new SQLException("Venda já está cancelada.");
+                }
+            }
+
             // 1️⃣ Atualiza status
             try (PreparedStatement ps = conn.prepareStatement(sqlAtualizaStatus)) {
                 ps.setLong(1, idVenda);
-                ps.executeUpdate();
+                int linhasAfetadas = ps.executeUpdate();
+                if (linhasAfetadas != 1) {
+                    throw new SQLException("Não foi possível cancelar a venda.");
+                }
             }
 
             // 2️⃣ Busca itens da venda

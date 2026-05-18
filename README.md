@@ -1,4 +1,4 @@
-# PDVex-v1
+# MERCADO-VS1
 
 Sistema desktop de PDV (Swing + Java 21) com persistência JDBC em PostgreSQL.
 
@@ -104,7 +104,7 @@ mvn exec:java -Dexec.mainClass="br.com.creativex.Main"
 Opcional:
 ```bash
 mvn package
-java -jar target/PDVex-v1-1.0-SNAPSHOT.jar
+java -jar target/MERCADO-VS1-1.0-SNAPSHOT.jar
 ```
 
 ## Testes

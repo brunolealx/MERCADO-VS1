@@ -369,10 +369,11 @@ public class CaixasForm extends JPanel {
 
         try {
             if (p.getQuantidadeEstoque().compareTo(qtd) < 0) {
-                int opc = JOptionPane.showConfirmDialog(this,
-                        "Estoque insuficiente!\nDisponível: " + p.getQuantidadeEstoque() + 
-                        "\nDeseja continuar mesmo assim?", "Aviso", JOptionPane.YES_NO_OPTION);
-                if (opc != JOptionPane.YES_OPTION) return;
+                JOptionPane.showMessageDialog(this,
+                        "Estoque insuficiente!\nDisponível: " + p.getQuantidadeEstoque(),
+                        "Aviso",
+                        JOptionPane.WARNING_MESSAGE);
+                return;
             }
 
             // --- BUSCAR DADOS TRIBUTÁRIOS DA VIEW vw_pdv_bipagem ---

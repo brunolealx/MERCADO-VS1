@@ -74,7 +74,6 @@ public class VendaDetalheDialog extends JDialog {
                 modelItens.addRow(new Object[]{
                         item.getNomeProduto(),
                         item.getQuantidade(),
-                        item.getPrecoUnitario(),
                         Formatador.moeda(item.getPrecoUnitario()),
                         Formatador.moeda(item.getSubtotal())
                 });

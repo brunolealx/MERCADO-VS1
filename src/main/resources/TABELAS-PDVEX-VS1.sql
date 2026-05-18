@@ -275,3 +275,41 @@ FROM
     public.tabela_produtos p
 LEFT JOIN 
     public.config_tributaria t ON p.cst_icms = t.cst_icms;
+
+--------------------------------------------------------------------------------
+-- 5. DADOS MINIMOS PARA PRIMEIRA IMPLANTACAO
+--------------------------------------------------------------------------------
+
+INSERT INTO public.tabela_estabelecimento (
+    razao_social,
+    nome_fantasia,
+    cnpj,
+    inscricao_estadual,
+    logradouro,
+    numero,
+    bairro,
+    cidade,
+    estado,
+    regime_tributario,
+    aliq_ibpt
+) VALUES (
+    'EMPRESA MODELO LTDA',
+    'MERCADO MODELO',
+    '00000000000100',
+    'ISENTO',
+    'RUA PRINCIPAL',
+    '100',
+    'CENTRO',
+    'SAO PAULO',
+    'SP',
+    1,
+    13.45
+) ON CONFLICT (cnpj) DO NOTHING;
+
+INSERT INTO public.tabela_usuarios (nome, login, senha, perfil, ativo)
+VALUES ('Administrador', 'admin', '$2a$10$EtaQt9gDJXvZwbKuiyO59eML28dnpzJKOTRR6jRnIUbrhYLbIFtoK', 'ADMIN', TRUE)
+ON CONFLICT (login) DO UPDATE
+SET nome = EXCLUDED.nome,
+    senha = EXCLUDED.senha,
+    perfil = EXCLUDED.perfil,
+    ativo = TRUE;

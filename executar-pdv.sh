@@ -1,8 +1,8 @@
 #!/bin/bash
 # Navega para a pasta do projeto (garantia extra)
-cd /home/pera/IdeaProjects/PDVex-versao1
+cd /home/pera/IdeaProjects/MERCADO-VS1 || exit 1
 
-echo "Iniciando PDVex-versao1 via Maven..."
+echo "Iniciando MERCADO-VS1 via Maven..."
 # Executa o comando e mantém o terminal aberto se der erro
 mvn exec:java -Dexec.mainClass="br.com.creativex.Main"
 
