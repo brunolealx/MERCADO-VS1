@@ -12,7 +12,17 @@ target/
 *.iws
 *.iml
 *.ipr
+# Pastas de build e compilados
+/out/
+/build/
+/target/
 
+# Configurações do IntelliJ
+.idea/
+*.iml
+
+# Sistema operacional
+.DS_Store
 ### Eclipse ###
 .apt_generated
 .classpath
