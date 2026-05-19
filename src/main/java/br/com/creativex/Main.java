@@ -4,10 +4,8 @@
 *
 */
 package br.com.creativex;
-
 import br.com.creativex.ui.login.LoginForm;
 import javax.swing.UIManager;
-
 /**
  * Classe principal de inicialização da aplicação ERP-PDVex-vs1.
  * 

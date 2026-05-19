@@ -31,6 +31,12 @@ public class ItemVenda {
     private String cstCofins;
     private BigDecimal pcofins = BigDecimal.ZERO;
     private BigDecimal valorCofins = BigDecimal.ZERO;
+    private String ncm;
+    private String cest;
+    private String cfop;
+    private String unidadeComercial;
+    private String unidadeTributavel;
+    private String ceanTributavel;
 
     public ItemVenda() {}
 
@@ -120,4 +126,16 @@ public class ItemVenda {
         calcularTributos();
     }
     public BigDecimal getValorCofins() { return valorCofins; }
+    public String getNcm() { return ncm; }
+    public void setNcm(String ncm) { this.ncm = ncm; }
+    public String getCest() { return cest; }
+    public void setCest(String cest) { this.cest = cest; }
+    public String getCfop() { return cfop; }
+    public void setCfop(String cfop) { this.cfop = cfop; }
+    public String getUnidadeComercial() { return unidadeComercial; }
+    public void setUnidadeComercial(String unidadeComercial) { this.unidadeComercial = unidadeComercial; }
+    public String getUnidadeTributavel() { return unidadeTributavel; }
+    public void setUnidadeTributavel(String unidadeTributavel) { this.unidadeTributavel = unidadeTributavel; }
+    public String getCeanTributavel() { return ceanTributavel; }
+    public void setCeanTributavel(String ceanTributavel) { this.ceanTributavel = ceanTributavel; }
 }

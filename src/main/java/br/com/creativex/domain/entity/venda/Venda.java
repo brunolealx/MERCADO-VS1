@@ -3,6 +3,8 @@
 
 package br.com.creativex.domain.entity.venda;
 
+import br.com.creativex.domain.entity.fiscal.StatusDocumentoFiscal;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
@@ -23,6 +25,8 @@ public class Venda {
     private BigDecimal totalTributos = BigDecimal.ZERO;
 
     private String status = "CONCLUIDA";
+    private StatusDocumentoFiscal statusFiscal = StatusDocumentoFiscal.PENDENTE_EMISSAO;
+    private String chaveNfe;
     private String metodoPagamento;
     private BigDecimal valorPago;
     private BigDecimal troco;
@@ -111,6 +115,10 @@ public String getClienteNome() {
     public void setTotalTributos(java.math.BigDecimal totalTributos) { this.totalTributos = totalTributos; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+    public StatusDocumentoFiscal getStatusFiscal() { return statusFiscal; }
+    public void setStatusFiscal(StatusDocumentoFiscal statusFiscal) { this.statusFiscal = statusFiscal; }
+    public String getChaveNfe() { return chaveNfe; }
+    public void setChaveNfe(String chaveNfe) { this.chaveNfe = chaveNfe; }
     public String getMetodoPagamento() { return metodoPagamento; }
     public void setMetodoPagamento(String metodoPagamento) { this.metodoPagamento = metodoPagamento; }
     public java.math.BigDecimal getValorPago() { return valorPago; }

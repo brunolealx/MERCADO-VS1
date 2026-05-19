@@ -6,12 +6,18 @@
 
 package br.com.creativex.infrastructure.persistence.repository.caixa;
 
+import br.com.creativex.application.fiscal.NfceXmlGenerator;
+import br.com.creativex.application.fiscal.NfceXmlResult;
 import br.com.creativex.db.Conexao;
+import br.com.creativex.domain.entity.config.Estabelecimento;
+import br.com.creativex.domain.entity.fiscal.StatusDocumentoFiscal;
 import br.com.creativex.domain.entity.venda.Venda;
 import br.com.creativex.domain.entity.venda.ItemVenda;
+import br.com.creativex.infrastructure.persistence.repository.estabelecimento.EstabelecimentoDAO;
 
 import java.math.BigDecimal;
 import java.sql.*;
+import java.time.OffsetDateTime;
 
 public class VendaDAO {
 
@@ -27,10 +33,22 @@ public class VendaDAO {
             INSERT INTO tabela_vendas 
             (id_usuario, id_cliente, nome_cliente_avulso, cpf_avulso, 
             total_bruto, total_desconto, total_liquido, total_tributos,
-            metodo_pagamento, valor_pago, troco)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            metodo_pagamento, valor_pago, troco, status_fiscal)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             RETURNING id_venda
             """;
+
+        String sqlDocumentoFiscal = """
+            INSERT INTO public.tabela_documentos_fiscais
+            (id_venda, modelo, status, ambiente, modo_emissao, serie, numero, chave_acesso, xml_gerado, data_emissao)
+            VALUES (?, 'NFCE', ?, 'HOMOLOGACAO', 'NORMAL', ?, ?, ?, ?, ?)
+        """;
+
+        String sqlAtualizaChave = """
+            UPDATE tabela_vendas
+            SET chave_nfe = ?
+            WHERE id_venda = ?
+        """;
 
         String sqlItem = """
             INSERT INTO tabela_itens_venda
@@ -67,6 +85,10 @@ public class VendaDAO {
             long idVenda;
             venda.recalcularTotais();
             BigDecimal totalTributos = venda.getTotalTributos() != null ? venda.getTotalTributos() : BigDecimal.ZERO;
+            StatusDocumentoFiscal statusFiscal = venda.getStatusFiscal() != null
+                    ? venda.getStatusFiscal()
+                    : StatusDocumentoFiscal.PENDENTE_EMISSAO;
+            venda.setStatusFiscal(statusFiscal);
 
             try (PreparedStatement ps = conn.prepareStatement(sqlVenda)) {
                 ps.setLong(1, venda.getIdUsuario());
@@ -93,12 +115,35 @@ public class VendaDAO {
                 ps.setString(9, venda.getMetodoPagamento());     // metodo_pagamento (SUBIU PARA 9)
                 ps.setBigDecimal(10, venda.getValorPago());      // valor_pago (SUBIU PARA 10)
                 ps.setBigDecimal(11, venda.getTroco());          // troco (SUBIU PARA 11)
+                ps.setString(12, statusFiscal.name());
 
                 ResultSet rs = ps.executeQuery();
                 if (!rs.next()) {
                     throw new SQLException("Erro ao gerar ID da venda.");
                 }
                 idVenda = rs.getLong("id_venda");
+                venda.setIdVenda(idVenda);
+            }
+
+            Estabelecimento estabelecimento = new EstabelecimentoDAO().carregarDados();
+            NfceXmlResult nfce = new NfceXmlGenerator().gerar(venda, estabelecimento, OffsetDateTime.now());
+            venda.setChaveNfe(nfce.getChaveAcesso());
+
+            try (PreparedStatement ps = conn.prepareStatement(sqlAtualizaChave)) {
+                ps.setString(1, nfce.getChaveAcesso());
+                ps.setLong(2, idVenda);
+                ps.executeUpdate();
+            }
+
+            try (PreparedStatement ps = conn.prepareStatement(sqlDocumentoFiscal)) {
+                ps.setLong(1, idVenda);
+                ps.setString(2, statusFiscal.name());
+                ps.setInt(3, nfce.getSerie());
+                ps.setLong(4, nfce.getNumero());
+                ps.setString(5, nfce.getChaveAcesso());
+                ps.setString(6, nfce.getXml());
+                ps.setTimestamp(7, Timestamp.from(OffsetDateTime.now().toInstant()));
+                ps.executeUpdate();
             }
             // 2️⃣ Itens + estoque + movimentação
             for (ItemVenda item : venda.getItens()) {

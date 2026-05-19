@@ -23,11 +23,29 @@ public class EstabelecimentoDAO {
                 est.setRazaoSocial(rs.getString("razao_social"));
                 est.setCnpj(rs.getString("cnpj"));
                 est.setInscricaoEstadual(rs.getString("inscricao_estadual"));
+                est.setLogradouro(rs.getString("logradouro"));
+                est.setNumero(rs.getString("numero"));
+                est.setBairro(rs.getString("bairro"));
+                est.setCidade(rs.getString("cidade"));
+                est.setEstado(rs.getString("estado"));
+                est.setCep(getStringIfExists(rs, "cep"));
+                est.setCodigoMunicipioIbge(getStringIfExists(rs, "codigo_municipio_ibge"));
                 est.setRegimeTributario(rs.getInt("regime_tributario"));
                 est.setAliqIbpt(rs.getBigDecimal("aliq_ibpt"));
                 return est;
             }
         }
         return null;
+    }
+
+    private String getStringIfExists(ResultSet rs, String columnName) throws SQLException {
+        try {
+            return rs.getString(columnName);
+        } catch (SQLException e) {
+            if ("42703".equals(e.getSQLState())) {
+                return null;
+            }
+            throw e;
+        }
     }
 }

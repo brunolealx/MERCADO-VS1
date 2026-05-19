@@ -394,6 +394,12 @@ public class CaixasForm extends JPanel {
             // --- DEFINIR VALORES TRIBUTÁRIOS DO BANCO ---
             item.setPrecoCustoMomento(p.getPrecoCusto());
             item.setCstFiscalMomento(p.getCstIcms());
+            item.setNcm(p.getNcm());
+            item.setCest(p.getCest());
+            item.setCfop(p.getCfopPadrao());
+            item.setUnidadeComercial(p.getUnidadeMedida());
+            item.setUnidadeTributavel(p.getUnidadeTributavel());
+            item.setCeanTributavel(p.getCeanTributavel());
 
             if (produtoComTributo != null) {
                 item.setAliquotaIcms(produtoComTributo.getAliquotaAplicada());

@@ -3,6 +3,7 @@
 
 package br.com.creativex.infrastructure.persistence.repository.caixa;
 
+import br.com.creativex.domain.entity.fiscal.StatusDocumentoFiscal;
 import br.com.creativex.domain.entity.venda.Venda;
 import br.com.creativex.domain.repository.VendaRepository;
 import br.com.creativex.db.Conexao;
@@ -46,7 +47,9 @@ public class VendaRepositoryJdbcAdapter implements VendaRepository {
                u.nome AS usuario,
                COALESCE(c.nome, v.nome_cliente_avulso, 'NÃO INFORMADO') AS cliente,
                v.total_liquido,
-               v.total_tributos
+               v.total_tributos,
+               v.status_fiscal,
+               v.chave_nfe
         FROM tabela_vendas v
         JOIN tabela_usuarios u ON v.id_usuario = u.id
         LEFT JOIN tabela_clientes c ON c.id = v.id_cliente
@@ -90,6 +93,11 @@ public class VendaRepositoryJdbcAdapter implements VendaRepository {
                     venda.setIdVenda(rs.getLong("id_venda")); // 🔥 CORRETO
                     venda.setTotalLiquido(rs.getBigDecimal("total_liquido"));
                     venda.setTotalTributos(rs.getBigDecimal("total_tributos"));
+                    venda.setChaveNfe(rs.getString("chave_nfe"));
+                    String statusFiscal = rs.getString("status_fiscal");
+                    if (statusFiscal != null && !statusFiscal.isBlank()) {
+                        venda.setStatusFiscal(StatusDocumentoFiscal.valueOf(statusFiscal));
+                    }
 
                     venda.setClienteNome(rs.getString("cliente"));
                     venda.setUsuarioNome(rs.getString("usuario"));
