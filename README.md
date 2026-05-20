@@ -113,6 +113,6 @@ mvn test
 ```
 Observação: em alguns ambientes Linux/JDK 21 o Mockito pode exigir ajuste de mock maker/agent para execução dos testes.
 
-## Autor
+## Autores
 
-Perácio Dias
+Bruno Leal e Peracio Dias
