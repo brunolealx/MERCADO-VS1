@@ -13,6 +13,7 @@ import br.com.creativex.presentation.controller.ProdutoController;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.text.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.math.BigDecimal;
@@ -129,19 +130,35 @@ public class ProdutoForm extends JPanel {
         JPanel p = new JPanel(new GridLayout(13, 2, 6, 6));
         p.setBorder(BorderFactory.createTitledBorder("Dados Operacionais"));
 
-        txtId = new JTextField();               adicionarCampo(p, "ID:", txtId);
-        txtCodigoBarra = new JTextField();      adicionarCampo(p, "Código de Barras:", txtCodigoBarra);
+        txtId = createFormattedField("####################");
+        adicionarCampo(p, "ID:", txtId);
+        
+        txtCodigoBarra = createFormattedField("##############");
+        adicionarCampo(p, "Código de Barras:", txtCodigoBarra);
+        
         txtDescricao = new JTextField();        adicionarCampo(p, "Descrição:", txtDescricao);
         txtMarca = new JTextField();            adicionarCampo(p, "Marca:", txtMarca);
         txtAtributos = new JTextField();        adicionarCampo(p, "Atributos:", txtAtributos);
         txtUnidadeMedida = new JTextField();    adicionarCampo(p, "Unidade de Medida:", txtUnidadeMedida);
         txtCategoria = new JTextField();        adicionarCampo(p, "Categoria:", txtCategoria);
-        txtCodGrupo = new JTextField();         adicionarCampo(p, "Código do Grupo:", txtCodGrupo);
+        
+        txtCodGrupo = createFormattedField("##########");
+        adicionarCampo(p, "Código do Grupo:", txtCodGrupo);
+        
         txtGrupo = new JTextField();            adicionarCampo(p, "Grupo:", txtGrupo);
         txtTipoBalanca = new JTextField();      adicionarCampo(p, "Tipo Balança (B/C/N):", txtTipoBalanca);
-        txtQuantidadeEstoque = new JTextField();adicionarCampo(p, "Quantidade Estoque:", txtQuantidadeEstoque);
-        txtPrecoCusto = new JTextField();       adicionarCampo(p, "Preço Custo (R$):", txtPrecoCusto);
-        txtPrecoVenda = new JTextField();       adicionarCampo(p, "Preço Venda (R$):", txtPrecoVenda);
+        
+        txtQuantidadeEstoque = new JTextField();
+        applyNumericFilter(txtQuantidadeEstoque);
+        adicionarCampo(p, "Quantidade Estoque:", txtQuantidadeEstoque);
+        
+        txtPrecoCusto = new JTextField();
+        applyNumericFilter(txtPrecoCusto);
+        adicionarCampo(p, "Preço Custo (R$):", txtPrecoCusto);
+        
+        txtPrecoVenda = new JTextField();
+        applyNumericFilter(txtPrecoVenda);
+        adicionarCampo(p, "Preço Venda (R$):", txtPrecoVenda);
 
         return p;
     }
@@ -150,20 +167,72 @@ public class ProdutoForm extends JPanel {
         JPanel p = new JPanel(new GridLayout(12, 2, 6, 6));
         p.setBorder(BorderFactory.createTitledBorder("Dados Fiscais e Tributários"));
 
-        txtNcm = new JTextField();              adicionarCampo(p, "NCM:", txtNcm);
-        txtCest = new JTextField();             adicionarCampo(p, "CEST:", txtCest);
-        txtCfopPadrao = new JTextField();       adicionarCampo(p, "CFOP Padrão:", txtCfopPadrao);
+        txtNcm = createFormattedField("########");
+        adicionarCampo(p, "NCM:", txtNcm);
+        
+        txtCest = createFormattedField("#######");
+        adicionarCampo(p, "CEST:", txtCest);
+        
+        txtCfopPadrao = createFormattedField("####");
+        adicionarCampo(p, "CFOP Padrão:", txtCfopPadrao);
+        
         txtUnidadeTributavel = new JTextField();adicionarCampo(p, "Unidade Tributável:", txtUnidadeTributavel);
         txtCeanTributavel = new JTextField();   adicionarCampo(p, "CEAN Tributável:", txtCeanTributavel);
-        txtCstIcms = new JTextField();          adicionarCampo(p, "CST ICMS:", txtCstIcms);
-        txtAliquotaIcms = new JTextField();     adicionarCampo(p, "Alíquota ICMS (%):", txtAliquotaIcms);
-        txtCstPis = new JTextField();           adicionarCampo(p, "CST PIS:", txtCstPis);
-        txtPpis = new JTextField();             adicionarCampo(p, "PIS (%):", txtPpis);
-        txtCstCofins = new JTextField();        adicionarCampo(p, "CST COFINS:", txtCstCofins);
-        txtPcofins = new JTextField();          adicionarCampo(p, "COFINS (%):", txtPcofins);
+        
+        txtCstIcms = createFormattedField("###");
+        adicionarCampo(p, "CST ICMS:", txtCstIcms);
+        
+        txtAliquotaIcms = new JTextField();
+        applyNumericFilter(txtAliquotaIcms);
+        adicionarCampo(p, "Alíquota ICMS (%):", txtAliquotaIcms);
+        
+        txtCstPis = createFormattedField("##");
+        adicionarCampo(p, "CST PIS:", txtCstPis);
+        
+        txtPpis = new JTextField();
+        applyNumericFilter(txtPpis);
+        adicionarCampo(p, "PIS (%):", txtPpis);
+        
+        txtCstCofins = createFormattedField("##");
+        adicionarCampo(p, "CST COFINS:", txtCstCofins);
+        
+        txtPcofins = new JTextField();
+        applyNumericFilter(txtPcofins);
+        adicionarCampo(p, "COFINS (%):", txtPcofins);
+        
         txtLoja = new JTextField();             adicionarCampo(p, "Loja:", txtLoja);
 
         return p;
+    }
+
+    private JFormattedTextField createFormattedField(String mask) {
+        try {
+            MaskFormatter mf = new MaskFormatter(mask);
+            mf.setPlaceholderCharacter(' ');
+            mf.setValueContainsLiteralCharacters(false);
+            JFormattedTextField ftf = new JFormattedTextField(mf);
+            return ftf;
+        } catch (java.text.ParseException e) {
+            return new JFormattedTextField();
+        }
+    }
+
+    private void applyNumericFilter(JTextField field) {
+        ((AbstractDocument) field.getDocument()).setDocumentFilter(new DocumentFilter() {
+            @Override
+            public void insertString(FilterBypass fb, int offset, String string, AttributeSet attr) throws BadLocationException {
+                if (string != null && string.matches("[0-9.,]*")) {
+                    super.insertString(fb, offset, string, attr);
+                }
+            }
+
+            @Override
+            public void replace(FilterBypass fb, int offset, int length, String text, AttributeSet attrs) throws BadLocationException {
+                if (text != null && text.matches("[0-9.,]*")) {
+                    super.replace(fb, offset, length, text, attrs);
+                }
+            }
+        });
     }
 
     private void adicionarCampo(JPanel p, String label, JTextField campo) {
@@ -345,7 +414,7 @@ private void atualizarProduto() {
 
         try {
         Produto p = criarProdutoDeCampos();
-        p.setId(Long.parseLong(txtId.getText()));
+        p.setId(Long.parseLong(txtId.getText().trim()));
 
         int opc = JOptionPane.showConfirmDialog(
                 this,
@@ -389,7 +458,7 @@ private void excluirProduto() {
     if (opc != JOptionPane.YES_OPTION) return;
 
     try {
-    long id = Long.parseLong(txtId.getText());
+    long id = Long.parseLong(txtId.getText().trim());
     controller.excluir(id);
 
         JOptionPane.showMessageDialog(this,
@@ -424,7 +493,7 @@ private void excluirProduto() {
         if (entrada == null || entrada.isBlank()) return;
 
         try {
-            long idInicial = Long.parseLong(entrada);
+            long idInicial = Long.parseLong(entrada.trim());
             carregarTabelaPorId(idInicial, 10);
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Erro ao listar: " + e.getMessage());
@@ -497,7 +566,8 @@ private void buscarPorCodigoBarra() {
         if (entrada == null || entrada.isBlank()) return;
 
         try {
-            Produto p = entrada.matches("\\d+") ? controller.buscarPorId(Long.parseLong(entrada)) : controller.buscarPorNome(entrada);
+            String valor = entrada.trim();
+            Produto p = valor.matches("\\d+") ? controller.buscarPorId(Long.parseLong(valor)) : controller.buscarPorNome(valor);
             if (p != null) {
                 preencherCampos(p);
                 JOptionPane.showMessageDialog(this, "Produto encontrado!");
@@ -543,7 +613,7 @@ private void buscarPorCodigoBarra() {
         }
     }
 
-    // adiciona nova linha na tabela com os dados recentes (usa buscarUltimo para pegar id)
+    // adiciona nova linha na tabela with los datos recentes (usa buscarUltimo para pegar id)
     private void adicionarLinhaTabela(Produto p) {
         try {
             Produto salvo = controller.buscarUltimo();
@@ -587,7 +657,7 @@ private void buscarPorCodigoBarra() {
             }
             if (isEmpty(txtDescricao.getText()) && isEmpty(txtPrecoVenda.getText())) {
                 JOptionPane.showMessageDialog(this,
-                        "Produto não pode ser salvo com informações vazias.",
+                        "Produto não pode ser saved com informações vazias.",
                         "Atenção",
                         JOptionPane.WARNING_MESSAGE
                 );
@@ -602,29 +672,29 @@ private void buscarPorCodigoBarra() {
     // ----------------- Criação / preenchimento do model -----------------
     private Produto criarProdutoDeCampos() {
         Produto p = new Produto();
-        p.setCodigoBarra(txtCodigoBarra.getText());
+        p.setCodigoBarra(txtCodigoBarra.getText().trim());
         p.setDescricao(txtDescricao.getText());
         p.setMarca(txtMarca.getText());
         p.setAtributos(txtAtributos.getText());
         p.setUnidadeMedida(txtUnidadeMedida.getText());
         p.setCategoria(txtCategoria.getText());
-        p.setCodGrupo(parseInt(txtCodGrupo.getText()));
+        p.setCodGrupo(parseInt(txtCodGrupo.getText().trim()));
         p.setGrupo(txtGrupo.getText());
         p.setTipoBalanca(getChar(txtTipoBalanca.getText()));
-        p.setQuantidadeEstoque(parseBig(txtQuantidadeEstoque.getText()));
-        p.setPrecoCusto(parseBig(txtPrecoCusto.getText()));
-        p.setPrecoVenda(parseBig(txtPrecoVenda.getText()));
-        p.setNcm(txtNcm.getText());
-        p.setCest(txtCest.getText());
-        p.setCfopPadrao(txtCfopPadrao.getText());
+        p.setQuantidadeEstoque(parseBig(txtQuantidadeEstoque.getText().trim()));
+        p.setPrecoCusto(parseBig(txtPrecoCusto.getText().trim()));
+        p.setPrecoVenda(parseBig(txtPrecoVenda.getText().trim()));
+        p.setNcm(txtNcm.getText().trim());
+        p.setCest(txtCest.getText().trim());
+        p.setCfopPadrao(txtCfopPadrao.getText().trim());
         p.setUnidadeTributavel(txtUnidadeTributavel.getText());
         p.setCeanTributavel(txtCeanTributavel.getText());
-        p.setCstIcms(txtCstIcms.getText());
-        p.setAliquotaIcms(parseBig(txtAliquotaIcms.getText()));
-        p.setCstPis(txtCstPis.getText());
-        p.setPpis(parseBig(txtPpis.getText()));
-        p.setCstCofins(txtCstCofins.getText());
-        p.setPcofins(parseBig(txtPcofins.getText()));
+        p.setCstIcms(txtCstIcms.getText().trim());
+        p.setAliquotaIcms(parseBig(txtAliquotaIcms.getText().trim()));
+        p.setCstPis(txtCstPis.getText().trim());
+        p.setPpis(parseBig(txtPpis.getText().trim()));
+        p.setCstCofins(txtCstCofins.getText().trim());
+        p.setPcofins(parseBig(txtPcofins.getText().trim()));
         p.setLoja(txtLoja.getText());
         return p;
     }
@@ -684,7 +754,7 @@ private void buscarPorCodigoBarra() {
 
     private BigDecimal parseBig(String s) {
         try {
-            return new BigDecimal(s.trim());
+            return new BigDecimal(s.trim().replace(",", "."));
         } catch (Exception e) {
             return BigDecimal.ZERO;
         }

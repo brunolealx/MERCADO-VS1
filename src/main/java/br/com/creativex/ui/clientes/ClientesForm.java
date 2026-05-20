@@ -11,10 +11,11 @@ import br.com.creativex.ui.MainWindow;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.text.MaskFormatter;
+import javax.swing.text.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.math.BigDecimal;
+import java.text.ParseException;
 import java.util.List;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -56,22 +57,63 @@ public class ClientesForm extends JPanel {
         JPanel p = new JPanel(new GridLayout(15, 1, 5, 5));
         p.setBorder(BorderFactory.createTitledBorder("Cadastro de Clientes PF"));
 
-        txtId = new JTextField(); txtId.setEditable(false); addCampo(p, "ID", txtId);
+        txtId = createFormattedField("####################");
+        txtId.setEditable(false);
+        addCampo(p, "ID", txtId);
+        
         txtNome = new JTextField(); addCampo(p, "Nome Completo*", txtNome);
         txtRg = new JTextField(); addCampo(p, "RG", txtRg);
+        
         txtCpf = new JFormattedTextField(criarMascara("###.###.###-##")); addCampo(p, "CPF*", txtCpf);
         txtTelefone = new JFormattedTextField(criarMascara("(##) #####-####")); addCampo(p, "Telefone", txtTelefone);
+        
         txtEmail = new JTextField(); addCampo(p, "Email", txtEmail);
         txtCep = new JFormattedTextField(criarMascara("#####-###")); addCampo(p, "CEP (Busca Automática)", txtCep);
         txtEndereco = new JTextField(); addCampo(p, "Logradouro", txtEndereco);
-        txtNumero = new JTextField(); addCampo(p, "Número", txtNumero);
+        
+        txtNumero = new JTextField();
+        applyNumericFilter(txtNumero);
+        addCampo(p, "Número", txtNumero);
+        
         txtBairro = new JTextField(); addCampo(p, "Bairro", txtBairro);
         txtCidade = new JTextField(); addCampo(p, "Cidade*", txtCidade);
         txtUf = new JTextField(); addCampo(p, "UF", txtUf);
-        txtLimiteCredito = new JFormattedTextField(); txtLimiteCredito.setValue(BigDecimal.ZERO);
+        
+        txtLimiteCredito = new JFormattedTextField();
+        txtLimiteCredito.setValue(BigDecimal.ZERO);
+        applyNumericFilter(txtLimiteCredito);
         addCampo(p, "Limite de Crédito (R$)", txtLimiteCredito);
 
         return p;
+    }
+
+    private JFormattedTextField createFormattedField(String mask) {
+        try {
+            MaskFormatter mf = new MaskFormatter(mask);
+            mf.setPlaceholderCharacter(' ');
+            mf.setValueContainsLiteralCharacters(false);
+            return new JFormattedTextField(mf);
+        } catch (ParseException e) {
+            return new JFormattedTextField();
+        }
+    }
+
+    private void applyNumericFilter(JTextField field) {
+        ((AbstractDocument) field.getDocument()).setDocumentFilter(new DocumentFilter() {
+            @Override
+            public void insertString(FilterBypass fb, int offset, String string, AttributeSet attr) throws BadLocationException {
+                if (string != null && string.matches("[0-9.,]*")) {
+                    super.insertString(fb, offset, string, attr);
+                }
+            }
+
+            @Override
+            public void replace(FilterBypass fb, int offset, int length, String text, AttributeSet attrs) throws BadLocationException {
+                if (text != null && text.matches("[0-9.,]*")) {
+                    super.replace(fb, offset, length, text, attrs);
+                }
+            }
+        });
     }
 
     private void addCampo(JPanel p, String label, JTextField campo) {
@@ -158,14 +200,14 @@ public class ClientesForm extends JPanel {
     }
 
     private void atualizar() {
-        if (txtId.getText().isBlank()) {
+        if (txtId.getText().trim().isBlank()) {
             JOptionPane.showMessageDialog(this, "Selecione um cliente para atualizar.");
             return;
         }
         if (!validarForm()) return;
         try {
             Cliente c = criarObjetoCliente();
-            c.setId(Long.parseLong(txtId.getText()));
+            c.setId(Long.parseLong(txtId.getText().trim()));
             controller.save(c);
             JOptionPane.showMessageDialog(this, "Cliente atualizado com sucesso!");
             listar();
@@ -283,8 +325,16 @@ public class ClientesForm extends JPanel {
         c.setBairro(txtBairro.getText());
         c.setCidade(txtCidade.getText());
         c.setUf(txtUf.getText());
-        c.setLimiteCredito(new BigDecimal(txtLimiteCredito.getValue().toString()));
+        c.setLimiteCredito(parseBig(txtLimiteCredito.getValue().toString()));
         return c;
+    }
+
+    private BigDecimal parseBig(String v) {
+        try {
+            return new BigDecimal(v.trim().replace(",", "."));
+        } catch (Exception e) {
+            return BigDecimal.ZERO;
+        }
     }
 
     private String somenteNumeros(String s) { return s == null ? "" : s.replaceAll("\\D", ""); }

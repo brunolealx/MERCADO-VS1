@@ -18,10 +18,12 @@ import br.com.creativex.ui.HomeScreen;
 import br.com.creativex.ui.MainWindow;
 
 import javax.swing.*;
+import javax.swing.text.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.math.BigDecimal;
 import java.text.NumberFormat;
+import java.text.ParseException;
 
 public class CaixasForm extends JPanel {
 //-> 25/04
@@ -59,11 +61,12 @@ public class CaixasForm extends JPanel {
 
     private void initComponents() {
         // CAMPOS DE ENTRADA
-        txtCodigoBarras = new JTextField();
+        txtCodigoBarras = createFormattedField("####################");
         txtCodigoBarras.setFont(new Font("SansSerif", Font.BOLD, 18));
 
         txtQuantidade = new JTextField("1");
         txtQuantidade.setFont(new Font("SansSerif", Font.BOLD, 18));
+        applyNumericFilter(txtQuantidade);
 
         JPanel pnlTopo = new JPanel(new BorderLayout());
       //->
@@ -130,6 +133,35 @@ public class CaixasForm extends JPanel {
         add(criarPainelOperacao(), BorderLayout.SOUTH);
 
         configurarEventos();
+    }
+
+    private JFormattedTextField createFormattedField(String mask) {
+        try {
+            MaskFormatter mf = new MaskFormatter(mask);
+            mf.setPlaceholderCharacter(' ');
+            mf.setValueContainsLiteralCharacters(false);
+            return new JFormattedTextField(mf);
+        } catch (ParseException e) {
+            return new JFormattedTextField();
+        }
+    }
+
+    private void applyNumericFilter(JTextField field) {
+        ((AbstractDocument) field.getDocument()).setDocumentFilter(new DocumentFilter() {
+            @Override
+            public void insertString(FilterBypass fb, int offset, String string, AttributeSet attr) throws BadLocationException {
+                if (string != null && string.matches("[0-9.,]*")) {
+                    super.insertString(fb, offset, string, attr);
+                }
+            }
+
+            @Override
+            public void replace(FilterBypass fb, int offset, int length, String text, AttributeSet attrs) throws BadLocationException {
+                if (text != null && text.matches("[0-9.,]*")) {
+                    super.replace(fb, offset, length, text, attrs);
+                }
+            }
+        });
     }
 
     private JPanel criarPainelOperacao() {
@@ -335,10 +367,10 @@ public class CaixasForm extends JPanel {
     }
 
     private void adicionarProdutoPorFiltro(String filtro) {
-        if (filtro.isEmpty()) return;
+        if (filtro.trim().isEmpty()) return;
 
         try {
-            Produto p = produtoController.buscarPorCodigoOuId(filtro);
+            Produto p = produtoController.buscarPorCodigoOuId(filtro.trim());
 
             if (p != null) {
                 processarAdicaoProduto(p);
@@ -357,7 +389,7 @@ public class CaixasForm extends JPanel {
         BigDecimal qtd;
 
         try {
-            qtd = new BigDecimal(txtQuantidade.getText().replace(",", "."));
+            qtd = new BigDecimal(txtQuantidade.getText().trim().replace(",", "."));
             if (qtd.compareTo(BigDecimal.ZERO) <= 0) {
                 JOptionPane.showMessageDialog(this, "Quantidade deve ser maior que zero!");
                 return;
@@ -637,10 +669,10 @@ private String alignRight(String texto, int largura) {
 }
 
 private String[] quebrarTexto(String texto, int tamanho) {
-    int linhas = (int) Math.ceil((double) texto.length() / tamanho);
-    String[] resultado = new String[linhas];
+    int lines = (int) Math.ceil((double) texto.length() / tamanho);
+    String[] resultado = new String[lines];
 
-    for (int i = 0; i < linhas; i++) {
+    for (int i = 0; i < lines; i++) {
         int inicio = i * tamanho;
         int fim = Math.min(inicio + tamanho, texto.length());
         resultado[i] = texto.substring(inicio, fim);

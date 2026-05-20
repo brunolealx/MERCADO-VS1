@@ -6,6 +6,7 @@
 package br.com.creativex.ui.caixas;
 
 import javax.swing.*;
+import javax.swing.text.*;
 import java.awt.*;
 import java.math.BigDecimal;
 import java.text.NumberFormat;
@@ -53,6 +54,7 @@ public class FinalizarVendaDialog extends JDialog {
         // VALOR PAGO
         txtValorPago = new JTextField();
         txtValorPago.setFont(new Font("Arial", Font.BOLD, 18));
+        applyNumericFilter(txtValorPago);
 
         // TROCO
         lblTroco = new JLabel(nf.format(BigDecimal.ZERO));
@@ -97,6 +99,24 @@ public class FinalizarVendaDialog extends JDialog {
 
     }
 
+    private void applyNumericFilter(JTextField field) {
+        ((AbstractDocument) field.getDocument()).setDocumentFilter(new DocumentFilter() {
+            @Override
+            public void insertString(FilterBypass fb, int offset, String string, AttributeSet attr) throws BadLocationException {
+                if (string != null && string.matches("[0-9.,]*")) {
+                    super.insertString(fb, offset, string, attr);
+                }
+            }
+
+            @Override
+            public void replace(FilterBypass fb, int offset, int length, String text, AttributeSet attrs) throws BadLocationException {
+                if (text != null && text.matches("[0-9.,]*")) {
+                    super.replace(fb, offset, length, text, attrs);
+                }
+            }
+        });
+    }
+
     // =========================
     // LÓGICA
     // =========================
@@ -106,6 +126,12 @@ public class FinalizarVendaDialog extends JDialog {
                     .replace("R$", "")
                     .replace(".", "")
                     .replace(",", ".");
+
+            if (texto.isEmpty()) {
+                lblTroco.setText(nf.format(BigDecimal.ZERO));
+                troco = BigDecimal.ZERO;
+                return;
+            }
 
             valorPago = new BigDecimal(texto);
 

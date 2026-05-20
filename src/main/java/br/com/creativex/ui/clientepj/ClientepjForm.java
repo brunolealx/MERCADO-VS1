@@ -12,7 +12,7 @@ import br.com.creativex.ui.MainWindow;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.text.MaskFormatter;
+import javax.swing.text.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.math.BigDecimal;
@@ -64,10 +64,17 @@ public class ClientepjForm extends JPanel {
         JPanel p = new JPanel(new GridLayout(18, 1, 6, 6));
         p.setBorder(BorderFactory.createTitledBorder("Cadastro de ClientesPJ"));
 
-        txtId = new JTextField(); txtId.setEnabled(false); addCampo(p, "ID", txtId);
+        txtId = createFormattedField("####################");
+        txtId.setEnabled(false);
+        addCampo(p, "ID", txtId);
+        
         txtRazaoSocial = new JTextField(); addCampo(p, "Razão Social*", txtRazaoSocial);
         txtNomeFantasia = new JTextField(); addCampo(p, "Nome Fantasia", txtNomeFantasia);
-        txtIe = new JTextField(); addCampo(p, "IE", txtIe);
+        
+        txtIe = new JTextField();
+        applyNumericFilter(txtIe);
+        addCampo(p, "IE", txtIe);
+        
         txtCnpj = new JFormattedTextField(criarMascara("##.###.###/####-##"));
         addCampo(p, "CNPJ*", txtCnpj);
 
@@ -76,18 +83,56 @@ public class ClientepjForm extends JPanel {
 
         txtEmail = new JTextField(); addCampo(p, "Email", txtEmail);
         txtEndereco = new JTextField(); addCampo(p, "Endereço", txtEndereco);
-        txtNumero = new JTextField(); addCampo(p, "Número", txtNumero);
+        
+        txtNumero = new JTextField();
+        applyNumericFilter(txtNumero);
+        addCampo(p, "Número", txtNumero);
+        
         txtComplemento = new JTextField(); addCampo(p, "Complemento", txtComplemento);
         txtBairro = new JTextField(); addCampo(p, "Bairro", txtBairro);
         txtCidade = new JTextField(); addCampo(p, "Cidade*", txtCidade);
         txtUf = new JTextField(); addCampo(p, "UF", txtUf);
+        
         txtCep = new JFormattedTextField(criarMascara("#####-###"));
         addCampo(p, "CEP", txtCep);
-        txtLimiteCredito = new JFormattedTextField(); txtLimiteCredito.setValue(BigDecimal.ZERO);
+        
+        txtLimiteCredito = new JFormattedTextField();
+        txtLimiteCredito.setValue(BigDecimal.ZERO);
+        applyNumericFilter(txtLimiteCredito);
         addCampo(p, "Limite Crédito R$", txtLimiteCredito);
 
         return p;
     }
+
+    private JFormattedTextField createFormattedField(String mask) {
+        try {
+            MaskFormatter mf = new MaskFormatter(mask);
+            mf.setPlaceholderCharacter(' ');
+            mf.setValueContainsLiteralCharacters(false);
+            return new JFormattedTextField(mf);
+        } catch (ParseException e) {
+            return new JFormattedTextField();
+        }
+    }
+
+    private void applyNumericFilter(JTextField field) {
+        ((AbstractDocument) field.getDocument()).setDocumentFilter(new DocumentFilter() {
+            @Override
+            public void insertString(FilterBypass fb, int offset, String string, AttributeSet attr) throws BadLocationException {
+                if (string != null && string.matches("[0-9.,]*")) {
+                    super.insertString(fb, offset, string, attr);
+                }
+            }
+
+            @Override
+            public void replace(FilterBypass fb, int offset, int length, String text, AttributeSet attrs) throws BadLocationException {
+                if (text != null && text.matches("[0-9.,]*")) {
+                    super.replace(fb, offset, length, text, attrs);
+                }
+            }
+        });
+    }
+
     private JPanel criarPainelBotoes() {
         JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT));
         btnNovo = new JButton("Novo");
@@ -109,6 +154,7 @@ public class ClientepjForm extends JPanel {
         try {
             MaskFormatter mf = new MaskFormatter(m);
             mf.setPlaceholderCharacter('_');
+            mf.setValueContainsLiteralCharacters(true);
             return mf;
         } catch (ParseException e) {
             throw new RuntimeException(e);
@@ -161,13 +207,13 @@ public class ClientepjForm extends JPanel {
     }
 
     private void atualizar() {
-        if (txtId.getText().isBlank()) {
+        if (txtId.getText().trim().isBlank()) {
             JOptionPane.showMessageDialog(this, "Selecione um fornecedor para atualizar.");
             return;
         }
         try {
             Clientepj c = criar();
-            c.setId(Long.parseLong(txtId.getText()));
+            c.setId(Long.parseLong(txtId.getText().trim()));
             controller.save(c);
             JOptionPane.showMessageDialog(this, "ClientesPJ atualizado!");
             listar();
@@ -219,12 +265,12 @@ private boolean validarCNPJ(String cnpj) {
         );
         if (filtro == null || filtro.isBlank()) return;
         // remove tudo que não for número
-        String somenteNumeros = filtro.replaceAll("\\D", "");
+        String numFiltrado = filtro.replaceAll("\\D", "");
         try {
             model.setRowCount(0);
             // ================= BUSCA POR ID =================
-            if (somenteNumeros.matches("\\d+") && somenteNumeros.length() <= 9) {
-                Clientepj c = controller.findById(Long.parseLong(somenteNumeros));
+            if (numFiltrado.matches("\\d+") && numFiltrado.length() <= 9) {
+                Clientepj c = controller.findById(Long.parseLong(numFiltrado));
                 if (c != null) {
                     preencherCampos(c);
                     modoEdicao(); //  habilita atualização
@@ -234,8 +280,8 @@ private boolean validarCNPJ(String cnpj) {
                 return;
             }
             // ================= BUSCA POR CNPJ =================
-               if (somenteNumeros.length() == 14) {
-                 Clientepj c = controller.findByCnpj(somenteNumeros);
+               if (numFiltrado.length() == 14) {
+                 Clientepj c = controller.findByCnpj(numFiltrado);
                if (c != null) {
                     preencherCampos(c);
                     modoEdicao(); //  habilita atualização
@@ -286,7 +332,7 @@ private boolean validarCNPJ(String cnpj) {
         c.setRazaoSocial(txtRazaoSocial.getText());
         c.setNomeFantasia(txtNomeFantasia.getText());
         c.setCnpj(txtCnpj.getText().replaceAll("\\D", ""));
-        c.setIe(txtIe.getText());
+        c.setIe(txtIe.getText().replaceAll("\\D", ""));
 
         c.setTelefone(txtTelefone.getText().replaceAll("\\D", ""));
         c.setEmail(txtEmail.getText());
@@ -334,7 +380,7 @@ private boolean validarCNPJ(String cnpj) {
     //===
     private BigDecimal parseBig(String v) {
         try {
-            return new BigDecimal(v.replaceAll("[^0-9,]", "").replace(",", "."));
+            return new BigDecimal(v.trim().replace(",", "."));
         } catch (Exception e) {
             return BigDecimal.ZERO;
         }
