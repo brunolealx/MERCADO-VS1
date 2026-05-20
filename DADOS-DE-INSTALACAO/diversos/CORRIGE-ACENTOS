@@ -5,6 +5,7 @@ SET
     marca = REPLACE(marca, '_x0090_', 'E')
 WHERE descricao LIKE '%_x0090_%' OR marca LIKE '%_x0090_%';
 
+
 -- Passo 2: Corrigir especificamente a NESTLÊ (caso você prefira com Ê)
 UPDATE public.tabela_produtos 
 SET 
