@@ -7,6 +7,7 @@ package br.com.creativex.ui.produtos;
 
 import br.com.creativex.ui.MainWindow;
 import br.com.creativex.ui.HomeScreen;
+import br.com.creativex.ui.components.JacobNumericField;
 
 import br.com.creativex.domain.entity.produto.Produto;
 import br.com.creativex.presentation.controller.ProdutoController;
@@ -28,10 +29,12 @@ public class ProdutoForm extends JPanel {
 
     // Campos de UI
     private JTextField txtId, txtCodigoBarra, txtDescricao, txtMarca, txtAtributos, txtUnidadeMedida,
-            txtCategoria, txtCodGrupo, txtGrupo, txtTipoBalanca, txtQuantidadeEstoque,
-            txtPrecoCusto, txtPrecoVenda, txtNcm, txtCest, txtCfopPadrao,
-            txtUnidadeTributavel, txtCeanTributavel, txtCstIcms, txtAliquotaIcms,
-            txtCstPis, txtPpis, txtCstCofins, txtPcofins, txtLoja;
+            txtCategoria, txtCodGrupo, txtGrupo, txtTipoBalanca, txtLoja,
+            txtNcm, txtCest, txtCfopPadrao, txtUnidadeTributavel, txtCeanTributavel, txtCstIcms,
+            txtCstPis, txtCstCofins;
+
+    private JacobNumericField txtQuantidadeEstoque, txtPrecoCusto, txtPrecoVenda,
+            txtAliquotaIcms, txtPpis, txtPcofins;
 
     // Botões e tabela
     private JButton btnSalvar;
@@ -148,16 +151,13 @@ public class ProdutoForm extends JPanel {
         txtGrupo = new JTextField();            adicionarCampo(p, "Grupo:", txtGrupo);
         txtTipoBalanca = new JTextField();      adicionarCampo(p, "Tipo Balança (B/C/N):", txtTipoBalanca);
         
-        txtQuantidadeEstoque = new JTextField();
-        applyNumericFilter(txtQuantidadeEstoque);
+        txtQuantidadeEstoque = new JacobNumericField(7, 3, false);
         adicionarCampo(p, "Quantidade Estoque:", txtQuantidadeEstoque);
         
-        txtPrecoCusto = new JTextField();
-        applyNumericFilter(txtPrecoCusto);
+        txtPrecoCusto = new JacobNumericField(7, 2, false);
         adicionarCampo(p, "Preço Custo (R$):", txtPrecoCusto);
         
-        txtPrecoVenda = new JTextField();
-        applyNumericFilter(txtPrecoVenda);
+        txtPrecoVenda = new JacobNumericField(7, 2, false);
         adicionarCampo(p, "Preço Venda (R$):", txtPrecoVenda);
 
         return p;
@@ -182,22 +182,19 @@ public class ProdutoForm extends JPanel {
         txtCstIcms = createFormattedField("###");
         adicionarCampo(p, "CST ICMS:", txtCstIcms);
         
-        txtAliquotaIcms = new JTextField();
-        applyNumericFilter(txtAliquotaIcms);
+        txtAliquotaIcms = new JacobNumericField(3, 2, false);
         adicionarCampo(p, "Alíquota ICMS (%):", txtAliquotaIcms);
         
         txtCstPis = createFormattedField("##");
         adicionarCampo(p, "CST PIS:", txtCstPis);
         
-        txtPpis = new JTextField();
-        applyNumericFilter(txtPpis);
+        txtPpis = new JacobNumericField(3, 2, false);
         adicionarCampo(p, "PIS (%):", txtPpis);
         
         txtCstCofins = createFormattedField("##");
         adicionarCampo(p, "CST COFINS:", txtCstCofins);
         
-        txtPcofins = new JTextField();
-        applyNumericFilter(txtPcofins);
+        txtPcofins = new JacobNumericField(3, 2, false);
         adicionarCampo(p, "COFINS (%):", txtPcofins);
         
         txtLoja = new JTextField();             adicionarCampo(p, "Loja:", txtLoja);
@@ -215,24 +212,6 @@ public class ProdutoForm extends JPanel {
         } catch (java.text.ParseException e) {
             return new JFormattedTextField();
         }
-    }
-
-    private void applyNumericFilter(JTextField field) {
-        ((AbstractDocument) field.getDocument()).setDocumentFilter(new DocumentFilter() {
-            @Override
-            public void insertString(FilterBypass fb, int offset, String string, AttributeSet attr) throws BadLocationException {
-                if (string != null && string.matches("[0-9.,]*")) {
-                    super.insertString(fb, offset, string, attr);
-                }
-            }
-
-            @Override
-            public void replace(FilterBypass fb, int offset, int length, String text, AttributeSet attrs) throws BadLocationException {
-                if (text != null && text.matches("[0-9.,]*")) {
-                    super.replace(fb, offset, length, text, attrs);
-                }
-            }
-        });
     }
 
     private void adicionarCampo(JPanel p, String label, JTextField campo) {
@@ -642,8 +621,6 @@ private void buscarPorCodigoBarra() {
             model.setValueAt(p.getCategoria(), row, 3);
             model.setValueAt(p.getQuantidadeEstoque(), row, 4);
             model.setValueAt(p.getPrecoVenda(), row, 5);
-        } else {
-            // se nenhuma linha selecionada, atualizar a tabela inteira pode ser feito aqui
         }
     }
 
@@ -655,15 +632,6 @@ private void buscarPorCodigoBarra() {
             if (p != null) {
                 preencherCampos(p);
             }
-            if (isEmpty(txtDescricao.getText()) && isEmpty(txtPrecoVenda.getText())) {
-                JOptionPane.showMessageDialog(this,
-                        "Produto não pode ser saved com informações vazias.",
-                        "Atenção",
-                        JOptionPane.WARNING_MESSAGE
-                );
-                return;
-            }
-
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "Erro ao carregar produto: " + ex.getMessage());
         }
@@ -681,20 +649,24 @@ private void buscarPorCodigoBarra() {
         p.setCodGrupo(parseInt(txtCodGrupo.getText().trim()));
         p.setGrupo(txtGrupo.getText());
         p.setTipoBalanca(getChar(txtTipoBalanca.getText()));
-        p.setQuantidadeEstoque(parseBig(txtQuantidadeEstoque.getText().trim()));
-        p.setPrecoCusto(parseBig(txtPrecoCusto.getText().trim()));
-        p.setPrecoVenda(parseBig(txtPrecoVenda.getText().trim()));
+        
+        p.setQuantidadeEstoque(txtQuantidadeEstoque.getBigDecimalValue());
+        p.setPrecoCusto(txtPrecoCusto.getBigDecimalValue());
+        p.setPrecoVenda(txtPrecoVenda.getBigDecimalValue());
+        
         p.setNcm(txtNcm.getText().trim());
         p.setCest(txtCest.getText().trim());
         p.setCfopPadrao(txtCfopPadrao.getText().trim());
         p.setUnidadeTributavel(txtUnidadeTributavel.getText());
         p.setCeanTributavel(txtCeanTributavel.getText());
         p.setCstIcms(txtCstIcms.getText().trim());
-        p.setAliquotaIcms(parseBig(txtAliquotaIcms.getText().trim()));
+        
+        p.setAliquotaIcms(txtAliquotaIcms.getBigDecimalValue());
         p.setCstPis(txtCstPis.getText().trim());
-        p.setPpis(parseBig(txtPpis.getText().trim()));
+        p.setPpis(txtPpis.getBigDecimalValue());
         p.setCstCofins(txtCstCofins.getText().trim());
-        p.setPcofins(parseBig(txtPcofins.getText().trim()));
+        p.setPcofins(txtPcofins.getBigDecimalValue());
+        
         p.setLoja(txtLoja.getText());
         return p;
     }
@@ -710,26 +682,37 @@ private void buscarPorCodigoBarra() {
         txtCodGrupo.setText(String.valueOf(p.getCodGrupo()));
         txtGrupo.setText(p.getGrupo());
         txtTipoBalanca.setText(String.valueOf(p.getTipoBalanca()));
-        txtQuantidadeEstoque.setText(String.valueOf(p.getQuantidadeEstoque()));
-        txtPrecoCusto.setText(String.valueOf(p.getPrecoCusto()));
-        txtPrecoVenda.setText(String.valueOf(p.getPrecoVenda()));
+        
+        txtQuantidadeEstoque.setValue(p.getQuantidadeEstoque());
+        txtPrecoCusto.setValue(p.getPrecoCusto());
+        txtPrecoVenda.setValue(p.getPrecoVenda());
+        
         txtNcm.setText(p.getNcm());
         txtCest.setText(p.getCest());
         txtCfopPadrao.setText(p.getCfopPadrao());
         txtUnidadeTributavel.setText(p.getUnidadeTributavel());
         txtCeanTributavel.setText(p.getCeanTributavel());
         txtCstIcms.setText(p.getCstIcms());
-        txtAliquotaIcms.setText(String.valueOf(p.getAliquotaIcms()));
+        
+        txtAliquotaIcms.setValue(p.getAliquotaIcms());
         txtCstPis.setText(p.getCstPis());
-        txtPpis.setText(String.valueOf(p.getPpis()));
+        txtPpis.setValue(p.getPpis());
         txtCstCofins.setText(p.getCstCofins());
-        txtPcofins.setText(String.valueOf(p.getPcofins()));
+        txtPcofins.setValue(p.getPcofins());
+        
         txtLoja.setText(p.getLoja());
     }
 
     // ----------------- Utilitários -----------------
     private void limparCampos() {
         for (Component c : this.getComponents()) limparComponenteRecursivo(c);
+        // Resetando JacobNumericFields explicitamente para zero
+        txtQuantidadeEstoque.setValue(BigDecimal.ZERO);
+        txtPrecoCusto.setValue(BigDecimal.ZERO);
+        txtPrecoVenda.setValue(BigDecimal.ZERO);
+        txtAliquotaIcms.setValue(BigDecimal.ZERO);
+        txtPpis.setValue(BigDecimal.ZERO);
+        txtPcofins.setValue(BigDecimal.ZERO);
     }
 
     private void limparComponenteRecursivo(Component c) {
@@ -741,23 +724,6 @@ private void buscarPorCodigoBarra() {
 
     private boolean isEmpty(String value) {
         return value == null || value.trim().isEmpty();
-    }
-
-    private BigDecimal toBig(String value) {
-        if (value == null) return BigDecimal.ZERO;
-        try {
-            return new BigDecimal(value.replace(",", ".").trim());
-        } catch (Exception e) {
-            return BigDecimal.ZERO;
-        }
-    }
-
-    private BigDecimal parseBig(String s) {
-        try {
-            return new BigDecimal(s.trim().replace(",", "."));
-        } catch (Exception e) {
-            return BigDecimal.ZERO;
-        }
     }
 
     private int parseInt(String s) {
@@ -779,33 +745,9 @@ private void buscarPorCodigoBarra() {
             JOptionPane.showMessageDialog(this,
                     "O campo DESCRIÇÃO é obrigatório.",
                     "Atenção",
-                    JOptionPane.WARNING_MESSAGE
-            );
-            txtDescricao.requestFocus();
+                    JOptionPane.WARNING_MESSAGE);
             return false;
         }
-
-        if (isEmpty(txtCategoria.getText())) {
-            JOptionPane.showMessageDialog(this,
-                    "O campo CATEGORIA é obrigatório.",
-                    "Atenção",
-                    JOptionPane.WARNING_MESSAGE
-            );
-            txtCategoria.requestFocus();
-            return false;
-        }
-
-        BigDecimal preco = toBig(txtPrecoVenda.getText());
-        if (preco == null || preco.compareTo(BigDecimal.ZERO) <= 0) {
-            JOptionPane.showMessageDialog(this,
-                    "O PREÇO DE VENDA deve ser maior que zero.",
-                    "Atenção",
-                    JOptionPane.WARNING_MESSAGE
-            );
-            txtPrecoVenda.requestFocus();
-            return false;
-        }
-
         return true;
     }
 }

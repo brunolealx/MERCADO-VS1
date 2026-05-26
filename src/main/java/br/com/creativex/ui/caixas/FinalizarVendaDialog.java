@@ -5,6 +5,8 @@
 //creativex sistemas
 package br.com.creativex.ui.caixas;
 
+import br.com.creativex.ui.components.JacobNumericField;
+
 import javax.swing.*;
 import javax.swing.text.*;
 import java.awt.*;
@@ -14,7 +16,7 @@ import java.text.NumberFormat;
 public class FinalizarVendaDialog extends JDialog {
 
     private JComboBox<String> cbPagamento;
-    private JTextField txtValorPago;
+    private JacobNumericField txtValorPago;
     private JLabel lblTotal, lblTroco;
 
     private JButton btnConfirmar, btnCancelar, btnVoltarAoCarrinho;
@@ -51,10 +53,9 @@ public class FinalizarVendaDialog extends JDialog {
         );
         cbPagamento.setFont(new Font("Arial", Font.PLAIN, 16));
 
-        // VALOR PAGO
-        txtValorPago = new JTextField();
+        // VALOR PAGO - Usando JacobNumericField
+        txtValorPago = new JacobNumericField(7, 2, false);
         txtValorPago.setFont(new Font("Arial", Font.BOLD, 18));
-        applyNumericFilter(txtValorPago);
 
         // TROCO
         lblTroco = new JLabel(nf.format(BigDecimal.ZERO));
@@ -95,26 +96,6 @@ public class FinalizarVendaDialog extends JDialog {
         add(pnlBotoes, BorderLayout.SOUTH);
 
         getRootPane().setDefaultButton(btnConfirmar);
-
-
-    }
-
-    private void applyNumericFilter(JTextField field) {
-        ((AbstractDocument) field.getDocument()).setDocumentFilter(new DocumentFilter() {
-            @Override
-            public void insertString(FilterBypass fb, int offset, String string, AttributeSet attr) throws BadLocationException {
-                if (string != null && string.matches("[0-9.,]*")) {
-                    super.insertString(fb, offset, string, attr);
-                }
-            }
-
-            @Override
-            public void replace(FilterBypass fb, int offset, int length, String text, AttributeSet attrs) throws BadLocationException {
-                if (text != null && text.matches("[0-9.,]*")) {
-                    super.replace(fb, offset, length, text, attrs);
-                }
-            }
-        });
     }
 
     // =========================
@@ -122,18 +103,13 @@ public class FinalizarVendaDialog extends JDialog {
     // =========================
     private void calcularTroco() {
         try {
-            String texto = txtValorPago.getText()
-                    .replace("R$", "")
-                    .replace(".", "")
-                    .replace(",", ".");
+            valorPago = txtValorPago.getBigDecimalValue();
 
-            if (texto.isEmpty()) {
+            if (valorPago.compareTo(BigDecimal.ZERO) == 0) {
                 lblTroco.setText(nf.format(BigDecimal.ZERO));
                 troco = BigDecimal.ZERO;
                 return;
             }
-
-            valorPago = new BigDecimal(texto);
 
             if (valorPago.compareTo(totalVenda) >= 0) {
                 troco = valorPago.subtract(totalVenda);
@@ -150,21 +126,10 @@ public class FinalizarVendaDialog extends JDialog {
     }
 
     private void confirmarVenda() {
-        try {
-            String texto = txtValorPago.getText()
-                    .replace("R$", "")
-                    .replace(".", "")
-                    .replace(",", ".")
-                    .trim();
+        valorPago = txtValorPago.getBigDecimalValue();
 
-            if (texto.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Informe o valor pago!");
-                return;
-            }
-
-            valorPago = new BigDecimal(texto);
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Valor pago inválido!");
+        if (valorPago.compareTo(BigDecimal.ZERO) == 0) {
+            JOptionPane.showMessageDialog(this, "Informe o valor pago!");
             return;
         }
 

@@ -16,7 +16,6 @@ import br.com.creativex.presentation.controller.ProdutoController;
 import br.com.creativex.application.config.ConsultarTributoProdutoUseCase;
 import br.com.creativex.ui.HomeScreen;
 import br.com.creativex.ui.MainWindow;
-import br.com.creativex.ui.components.JacobNumericField;
 
 import javax.swing.*;
 import javax.swing.text.*;
@@ -29,8 +28,7 @@ import java.text.ParseException;
 public class CaixasForm extends JPanel {
     private JPanel painelItemAtual;
     private JLabel lblItemAtual;
-    private JTextField txtCodigoBarras, txtTotalVenda;
-    private JacobNumericField txtQuantidade;
+    private JTextField txtCodigoBarras, txtQuantidade, txtTotalVenda;
     private JTextArea areaCupom;
     private JButton btnFinalizar, btnRemoverItem, btnVoltar;
 
@@ -62,13 +60,12 @@ public class CaixasForm extends JPanel {
     }
 
     private void initComponents() {
-        txtCodigoBarras = new JTextField();
+        txtCodigoBarras = createFormattedField("####################");
         txtCodigoBarras.setFont(new Font("SansSerif", Font.BOLD, 18));
 
-        // JacobNumericField(inteiros, decimais, mostrarMoeda)
-        txtQuantidade = new JacobNumericField(4, 2, false);
+        txtQuantidade = new JTextField("1");
         txtQuantidade.setFont(new Font("SansSerif", Font.BOLD, 18));
-        txtQuantidade.setText("100"); // Define "1,00" via comportamento COBOL
+        applyNumericFilter(txtQuantidade);
 
         JPanel pnlTopo = new JPanel(new BorderLayout());
         
@@ -129,6 +126,35 @@ public class CaixasForm extends JPanel {
         add(criarPainelOperacao(), BorderLayout.SOUTH);
 
         configurarEventos();
+    }
+
+    private JFormattedTextField createFormattedField(String mask) {
+        try {
+            MaskFormatter mf = new MaskFormatter(mask);
+            mf.setPlaceholderCharacter(' ');
+            mf.setValueContainsLiteralCharacters(false);
+            return new JFormattedTextField(mf);
+        } catch (ParseException e) {
+            return new JFormattedTextField();
+        }
+    }
+
+    private void applyNumericFilter(JTextField field) {
+        ((AbstractDocument) field.getDocument()).setDocumentFilter(new DocumentFilter() {
+            @Override
+            public void insertString(FilterBypass fb, int offset, String string, AttributeSet attr) throws BadLocationException {
+                if (string != null && string.matches("[0-9.,]*")) {
+                    super.insertString(fb, offset, string, attr);
+                }
+            }
+
+            @Override
+            public void replace(FilterBypass fb, int offset, int length, String text, AttributeSet attrs) throws BadLocationException {
+                if (text != null && text.matches("[0-9.,]*")) {
+                    super.replace(fb, offset, length, text, attrs);
+                }
+            }
+        });
     }
 
     private JPanel criarPainelOperacao() {
@@ -255,32 +281,24 @@ public class CaixasForm extends JPanel {
 
     private void adicionarProdutoPorFiltro(String filtro) {
         if (filtro == null || filtro.trim().isEmpty()) return;
-        
-        new SwingWorker<Produto, Void>() {
-            @Override protected Produto doInBackground() throws Exception {
-                return produtoController.buscarPorCodigoOuId(filtro.trim());
+        try {
+            Produto p = produtoController.buscarPorCodigoOuId(filtro.trim());
+            if (p != null) {
+                processarAdicaoProduto(p);
+            } else {
+                JOptionPane.showMessageDialog(this, "Produto não encontrado!");
+                txtCodigoBarras.requestFocus();
+                txtCodigoBarras.selectAll();
             }
-            @Override protected void done() {
-                try {
-                    Produto p = get();
-                    if (p != null) processarAdicaoProduto(p);
-                    else {
-                        JOptionPane.showMessageDialog(CaixasForm.this, "Produto não encontrado!");
-                        txtCodigoBarras.requestFocus();
-                        txtCodigoBarras.selectAll();
-                    }
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                    JOptionPane.showMessageDialog(CaixasForm.this, "Erro: " + ex.getMessage());
-                }
-            }
-        }.execute();
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Erro: " + ex.getMessage());
+        }
     }
 
     private void processarAdicaoProduto(Produto p) {
         BigDecimal qtd;
         try {
-            qtd = txtQuantidade.getBigDecimalValue();
+            qtd = new BigDecimal(txtQuantidade.getText().trim().replace(",", "."));
             if (qtd.compareTo(BigDecimal.ZERO) <= 0) {
                 JOptionPane.showMessageDialog(this, "Quantidade deve ser maior que zero!");
                 return;
@@ -290,34 +308,54 @@ public class CaixasForm extends JPanel {
             return;
         }
 
-        if (p.getQuantidadeEstoque() != null && p.getQuantidadeEstoque().compareTo(qtd) < 0) {
-            JOptionPane.showMessageDialog(this, "Estoque insuficiente!\nDisponível: " + p.getQuantidadeEstoque(), "Aviso", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
+        try {
+            if (p.getQuantidadeEstoque() != null && p.getQuantidadeEstoque().compareTo(qtd) < 0) {
+                JOptionPane.showMessageDialog(this, "Estoque insuficiente!\nDisponível: " + p.getQuantidadeEstoque(), "Aviso", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
 
-        new SwingWorker<ProdutoBipagem, Void>() {
-            @Override protected ProdutoBipagem doInBackground() throws Exception {
-                if (p.getCodigoBarra() != null && !p.getCodigoBarra().isBlank()) {
-                    return consultarTributoUseCase.buscarPorCodigoBarra(p.getCodigoBarra());
-                }
-                return null;
+            ProdutoBipagem produtoComTributo = null;
+            if (p.getCodigoBarra() != null && !p.getCodigoBarra().isBlank()) {
+                produtoComTributo = consultarTributoUseCase.buscarPorCodigoBarra(p.getCodigoBarra());
             }
-            @Override protected void done() {
-                try {
-                    ProdutoBipagem produtoComTributo = get();
-                    String descFinal = (p.getDescricao() != null ? p.getDescricao() : "PRODUTO").replaceAll("_x[0-9A-Fa-f]{4}_", "").trim().toUpperCase();
-                    ItemVenda item = new ItemVenda(p.getId(), descFinal, qtd, p.getPrecoVenda() != null ? p.getPrecoVenda() : BigDecimal.ZERO);
-                    item.setCodigoBarra(p.getCodigoBarra());
-                    item.setAliquotaIcms(produtoComTributo != null ? produtoComTributo.getAliquotaAplicada() : (p.getAliquotaIcms() != null ? p.getAliquotaIcms() : BigDecimal.ZERO));
-                    item.calcularTributos();
-                    vendaAtual.adicionarItem(item);
-                    atualizarItemAtual(p, produtoComTributo);
-                    atualizarCupom();
-                    atualizarExibicaoTotal();
-                    limparCamposInput();
-                } catch (Exception ex) { ex.printStackTrace(); }
+
+            String descFinal = (p.getDescricao() != null ? p.getDescricao() : "PRODUTO SEM DESCRICAO")
+                    .replaceAll("_x[0-9A-Fa-f]{4}_", "").trim().toUpperCase();
+
+            ItemVenda item = new ItemVenda(p.getId(), descFinal, qtd, p.getPrecoVenda() != null ? p.getPrecoVenda() : BigDecimal.ZERO);
+            item.setCodigoBarra(p.getCodigoBarra());
+            item.setPrecoCustoMomento(p.getPrecoCusto());
+            item.setCstFiscalMomento(p.getCstIcms());
+            item.setNcm(p.getNcm());
+            item.setCest(p.getCest());
+            item.setCfop(p.getCfopPadrao());
+            item.setUnidadeComercial(p.getUnidadeMedida());
+            item.setUnidadeTributavel(p.getUnidadeTributavel());
+            item.setCeanTributavel(p.getCeanTributavel());
+
+            if (produtoComTributo != null && produtoComTributo.getAliquotaAplicada() != null) {
+                item.setAliquotaIcms(produtoComTributo.getAliquotaAplicada());
+            } else {
+                item.setAliquotaIcms(p.getAliquotaIcms() != null ? p.getAliquotaIcms() : BigDecimal.ZERO);
             }
-        }.execute();
+
+            item.setCstPis(p.getCstPis());
+            item.setPpis(p.getPpis());
+            item.setCstCofins(p.getCstCofins());
+            item.setPcofins(p.getPcofins());
+
+            item.calcularTributos();
+            vendaAtual.adicionarItem(item);
+
+            atualizarItemAtual(p, produtoComTributo);
+            atualizarCupom();
+            atualizarExibicaoTotal();
+            limparCamposInput();
+
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Erro ao processar item: " + ex.getMessage());
+            ex.printStackTrace();
+        }
     }
 
     private void atualizarItemAtual(Produto p, ProdutoBipagem produtoComTributo) {
@@ -445,7 +483,7 @@ public class CaixasForm extends JPanel {
 
     private void limparCamposInput() {
         txtCodigoBarras.setText("");
-        txtQuantidade.setText("100"); // Volta para 1,00
+        txtQuantidade.setText("1");
         txtCodigoBarras.requestFocus();
     }
 
