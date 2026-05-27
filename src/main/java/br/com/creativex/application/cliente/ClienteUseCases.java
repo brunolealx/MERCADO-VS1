@@ -10,6 +10,15 @@ import br.com.creativex.domain.repository.ClienteRepository;
 
 import java.util.List;
 
+/**
+ * Casos de uso unificados para gerenciamento de clientes (PF e PJ).
+ * 
+ * Centraliza a lógica de negócio e orquestra chamadas ao repositório.
+ * 
+ * @author Peracio Dias
+ * @version 2.0
+ * @since 2026-05-26
+ */
 public class ClienteUseCases {
 
     private final ClienteRepository repo;
@@ -26,15 +35,19 @@ public class ClienteUseCases {
         return repo.findById(id);
     }
 
-    public Cliente findByCpf(String cpf) {
-        return repo.findByCpf(cpf);
+    public Cliente findByDocumento(String documento) {
+        return repo.findByDocumento(documento);
     }
 
-    public List<Cliente> findByName(String nome) {
-        return repo.findByName(nome);
+    public List<Cliente> findByNomeRazaoSocial(String nome) {
+        return repo.findByNomeRazaoSocial(nome);
     }
 
     public List<Cliente> listByIdLimit(long idInicial, int limite) {
         return repo.findByIdLimit(idInicial, limite);
+    }
+    
+    public void deleteById(long id) {
+        repo.deleteById(id);
     }
 }

@@ -259,7 +259,7 @@ public class ClientesForm extends JPanel {
             model.setRowCount(0);
             List<Cliente> lista = controller.listByIdLimit(1, 100);
             for (Cliente c : lista) {
-                model.addRow(new Object[]{c.getId(), c.getNome(), c.getCpf(), c.getTelefone(), c.getCidade()});
+                model.addRow(new Object[]{c.getId(), c.getNomeRazaoSocial(), c.getDocumento(), c.getTelefone(), c.getCidade()});
             }
         } catch (Exception e) { e.printStackTrace(); }
     }
@@ -269,9 +269,9 @@ public class ClientesForm extends JPanel {
             Cliente c = controller.findById(id);
             if (c != null) {
                 txtId.setText(String.valueOf(c.getId()));
-                txtNome.setText(c.getNome());
-                txtCpf.setText(c.getCpf());
-                txtRg.setText(c.getRg());
+                txtNome.setText(c.getNomeRazaoSocial());
+                txtCpf.setText(c.getDocumento());
+                txtRg.setText(c.getRgInscricaoEstadual());
                 txtTelefone.setText(c.getTelefone());
                 txtEmail.setText(c.getEmail());
                 txtCep.setText(c.getCep());
@@ -314,9 +314,10 @@ public class ClientesForm extends JPanel {
 
     private Cliente criarObjetoCliente() {
         Cliente c = new Cliente();
-        c.setNome(txtNome.getText());
-        c.setCpf(somenteNumeros(txtCpf.getText()));
-        c.setRg(txtRg.getText());
+        c.setTipoPessoa("F");
+        c.setNomeRazaoSocial(txtNome.getText());
+        c.setDocumento(somenteNumeros(txtCpf.getText()));
+        c.setRgInscricaoEstadual(txtRg.getText());
         c.setTelefone(somenteNumeros(txtTelefone.getText()));
         c.setEmail(txtEmail.getText());
         c.setCep(somenteNumeros(txtCep.getText()));
@@ -358,19 +359,19 @@ public class ClientesForm extends JPanel {
             if (num.length() > 0 && num.length() <= 6) {
                 Cliente c = controller.findById(Long.parseLong(num));
                 if (c != null) {
-                    model.addRow(new Object[]{c.getId(), c.getNome(), c.getCpf(), c.getTelefone(), c.getCidade()});
+                    model.addRow(new Object[]{c.getId(), c.getNomeRazaoSocial(), c.getDocumento(), c.getTelefone(), c.getCidade()});
                     carregarCliente(c.getId()); // Sincroniza campos
                 }
             } else if (num.length() == 11) {
-                Cliente c = controller.findByCpf(num);
+                Cliente c = controller.findByDocumento(num);
                 if (c != null) {
-                    model.addRow(new Object[]{c.getId(), c.getNome(), c.getCpf(), c.getTelefone(), c.getCidade()});
+                    model.addRow(new Object[]{c.getId(), c.getNomeRazaoSocial(), c.getDocumento(), c.getTelefone(), c.getCidade()});
                     carregarCliente(c.getId()); // Sincroniza campos
                 }
             } else {
-                List<Cliente> lista = controller.findByName(f);
+                List<Cliente> lista = controller.findByNomeRazaoSocial(f);
                 for (Cliente c : lista) {
-                    model.addRow(new Object[]{c.getId(), c.getNome(), c.getCpf(), c.getTelefone(), c.getCidade()});
+                    model.addRow(new Object[]{c.getId(), c.getNomeRazaoSocial(), c.getDocumento(), c.getTelefone(), c.getCidade()});
                 }
             }
         } catch (Exception e) { e.printStackTrace(); }

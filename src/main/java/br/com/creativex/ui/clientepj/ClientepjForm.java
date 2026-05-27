@@ -5,8 +5,8 @@
 //creativex sistemas
 package br.com.creativex.ui.clientepj;
 
-import br.com.creativex.domain.entity.clientepj.Clientepj;
-import br.com.creativex.presentation.controller.ClientepjController;
+import br.com.creativex.domain.entity.cliente.Cliente;
+import br.com.creativex.presentation.controller.ClienteController;
 import br.com.creativex.ui.HomeScreen;
 import br.com.creativex.ui.MainWindow;
 
@@ -19,6 +19,13 @@ import java.math.BigDecimal;
 import java.text.ParseException;
 import java.util.List;
 
+/**
+ * Formulário de Cadastro de Clientes PJ (Pessoa Jurídica) utilizando a entidade unificada.
+ * 
+ * @author Peracio Dias
+ * @version 2.0
+ * @since 2026-05-26
+ */
 public class ClientepjForm extends JPanel {
 
     private JTextField txtId, txtRazaoSocial, txtNomeFantasia, txtIe, txtEmail;
@@ -30,7 +37,7 @@ public class ClientepjForm extends JPanel {
     private JTable table;
     private DefaultTableModel model;
 
-    private final ClientepjController controller = br.com.creativex.config.AppFactory.clientepjController();
+    private final ClienteController controller = br.com.creativex.config.AppFactory.clienteController();
 
     public ClientepjForm() {
         setLayout(new BorderLayout());
@@ -44,6 +51,7 @@ public class ClientepjForm extends JPanel {
         model = new DefaultTableModel(new String[]{
                 "ID", "Razão Social", "CNPJ", "Telefone", "Cidade"
         }, 0) {
+            @Override
             public boolean isCellEditable(int r, int c) {
                 return false;
             }
@@ -62,7 +70,7 @@ public class ClientepjForm extends JPanel {
     private JPanel criarPainel() {
 
         JPanel p = new JPanel(new GridLayout(18, 1, 6, 6));
-        p.setBorder(BorderFactory.createTitledBorder("Cadastro de ClientesPJ"));
+        p.setBorder(BorderFactory.createTitledBorder("Cadastro de Clientes PJ"));
 
         txtId = createFormattedField("####################");
         txtId.setEnabled(false);
@@ -73,7 +81,7 @@ public class ClientepjForm extends JPanel {
         
         txtIe = new JTextField();
         applyNumericFilter(txtIe);
-        addCampo(p, "IE", txtIe);
+        addCampo(p, "Inscrição Estadual", txtIe);
         
         txtCnpj = new JFormattedTextField(criarMascara("##.###.###/####-##"));
         addCampo(p, "CNPJ*", txtCnpj);
@@ -170,16 +178,37 @@ public class ClientepjForm extends JPanel {
         btnVoltar.addActionListener(e -> voltar());
 
         txtCnpj.addKeyListener(new KeyAdapter() {
-
+            @Override
             public void keyReleased(KeyEvent e) {
                 String cnpj = somenteNumeros(txtCnpj.getText());
-                //PASSA O Cnpj para checar se existe !!!
                 txtCnpj.setForeground(validarCNPJ(cnpj) ? new Color(0, 120, 0) : Color.RED);
-
             }
         });
-
+        
+        table.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                int row = table.getSelectedRow();
+                if (row >= 0) {
+                    long id = (long) model.getValueAt(row, 0);
+                    carregar(id);
+                }
+            }
+        });
     }
+    
+    private void carregar(long id) {
+        try {
+            Cliente c = controller.findById(id);
+            if (c != null) {
+                preencherCampos(c);
+                modoEdicao();
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Erro ao carregar: " + e.getMessage());
+        }
+    }
+
     // ================= AÇÕES =================
     private void modoNovo() {
         limparCampos();
@@ -198,9 +227,9 @@ public class ClientepjForm extends JPanel {
         if (!validar()) return;
         try {
             controller.save(criar());
-            JOptionPane.showMessageDialog(this, "ClientesPJ cadastrado!");
+            JOptionPane.showMessageDialog(this, "Cliente PJ cadastrado!");
             listar();
-            modoEdicao();
+            modoNovo();
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Erro ao salvar: " + e.getMessage());
         }
@@ -208,133 +237,109 @@ public class ClientepjForm extends JPanel {
 
     private void atualizar() {
         if (txtId.getText().trim().isBlank()) {
-            JOptionPane.showMessageDialog(this, "Selecione um fornecedor para atualizar.");
+            JOptionPane.showMessageDialog(this, "Selecione um cliente para atualizar.");
             return;
         }
         try {
-            Clientepj c = criar();
+            Cliente c = criar();
             c.setId(Long.parseLong(txtId.getText().trim()));
             controller.save(c);
-            JOptionPane.showMessageDialog(this, "ClientesPJ atualizado!");
+            JOptionPane.showMessageDialog(this, "Cliente PJ atualizado!");
             listar();
+            modoNovo();
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Erro ao atualizar: " + e.getMessage());
         }
     }
 
-//== Remove caracteres não numéricos antes de validar
 private String somenteNumeros(String s) { return s == null ? "" : s.replaceAll("\\D", ""); }
 
-//=== teste de cnpj====
 private boolean validarCNPJ(String cnpj) {
-
-    // CNPJ deve ter 14 dígitos e não pode ser uma sequência repetida
     if (cnpj.length() != 14 || cnpj.matches("(\\d)\\1{13}")) return false;
-
     try {
         int[] peso1 = {5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2};
         int[] peso2 = {6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2};
-
-        // Cálculo do primeiro dígito (r1)
         int soma1 = 0;
         for (int i = 0; i < 12; i++) {
             soma1 += Integer.parseInt(cnpj.substring(i, i + 1)) * peso1[i];
         }
         int r1 = soma1 % 11;
         r1 = (r1 < 2) ? 0 : 11 - r1;
-
-        // Cálculo do segundo dígito (r2)
         int soma2 = 0;
         for (int i = 0; i < 12; i++) {
             soma2 += Integer.parseInt(cnpj.substring(i, i + 1)) * peso2[i];
         }
-        soma2 += r1 * peso2[12]; // Inclui o primeiro dígito calculado no peso 2
-
+        soma2 += r1 * peso2[12];
         int r2 = soma2 % 11;
         r2 = (r2 < 2) ? 0 : 11 - r2;
-
         return cnpj.endsWith("" + r1 + r2);
-    } catch (Exception e) {
-        return false;
-    }
+    } catch (Exception e) { return false; }
 }
-//======BUSCAR======
+
     private void buscar() {
-        String filtro = JOptionPane.showInputDialog(
-                this, "Digite ID, Razão Social ou CNPJ:"
-        );
+        String filtro = JOptionPane.showInputDialog(this, "Digite ID, Razão Social ou CNPJ:");
         if (filtro == null || filtro.isBlank()) return;
-        // remove tudo que não for número
-        String numFiltrado = filtro.replaceAll("\\D", "");
+        String numFiltrado = somenteNumeros(filtro);
         try {
             model.setRowCount(0);
-            // ================= BUSCA POR ID =================
-            if (numFiltrado.matches("\\d+") && numFiltrado.length() <= 9) {
-                Clientepj c = controller.findById(Long.parseLong(numFiltrado));
+            if (numFiltrado.matches("\\d+") && numFiltrado.length() <= 6) {
+                Cliente c = controller.findById(Long.parseLong(numFiltrado));
                 if (c != null) {
-                    preencherCampos(c);
-                    modoEdicao(); //  habilita atualização
+                    adicionarNaGrade(c);
+                    carregar(c.getId());
                 } else {
-                    JOptionPane.showMessageDialog(this, "Fornecedor não encontrado.");
+                    JOptionPane.showMessageDialog(this, "Cliente não encontrado.");
                 }
-                return;
-            }
-            // ================= BUSCA POR CNPJ =================
-               if (numFiltrado.length() == 14) {
-                 Clientepj c = controller.findByCnpj(numFiltrado);
-               if (c != null) {
-                    preencherCampos(c);
-                    modoEdicao(); //  habilita atualização
+            } else if (numFiltrado.length() == 14) {
+                Cliente c = controller.findByDocumento(numFiltrado);
+                if (c != null) {
+                    adicionarNaGrade(c);
+                    carregar(c.getId());
                 } else {
-                    JOptionPane.showMessageDialog(this, "Fornecedor não encontrado.");
+                    JOptionPane.showMessageDialog(this, "Cliente não encontrado.");
                 }
-                return;
+            } else {
+                List<Cliente> lista = controller.findByNomeRazaoSocial(filtro);
+                if (lista.isEmpty()) {
+                    JOptionPane.showMessageDialog(this, "Nenhum cliente encontrado.");
+                } else {
+                    for (Cliente c : lista) adicionarNaGrade(c);
+                }
             }
-            // ================= BUSCA POR RAZÃO SOCIAL =================
-            List<Clientepj> lista = controller.findByRazaoSocial(filtro);
-
-            if (lista.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Nenhum fornecedor encontrado.");
-                return;
-            }
-            for (Clientepj c : lista) {
-                model.addRow(new Object[]{
-                        c.getId(),
-                        c.getRazaoSocial(),
-                        c.getCnpj(),
-                        c.getTelefone(),
-                        c.getCidade()
-                });
-            }
-
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Erro na busca: " + e.getMessage());
         }
     }
 
+    private void adicionarNaGrade(Cliente c) {
+        model.addRow(new Object[]{
+                c.getId(), c.getNomeRazaoSocial(), c.getDocumento(),
+                c.getTelefone(), c.getCidade()
+        });
+    }
+
     private void listar() {
         try {
             model.setRowCount(0);
-            List<Clientepj> lista = controller.listByIdLimit(1, 10);
-            for (Clientepj c : lista) {
-                model.addRow(new Object[]{
-                        c.getId(), c.getRazaoSocial(), c.getCnpj(),
-                        c.getTelefone(), c.getCidade()
-                });
+            List<Cliente> lista = controller.listByIdLimit(1, 100);
+            for (Cliente c : lista) {
+                if (c.isPessoaJuridica()) {
+                    adicionarNaGrade(c);
+                }
             }
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, e.getMessage());
         }
     }
-    //==
-    private Clientepj criar() {
-        Clientepj c = new Clientepj();
-        c.setRazaoSocial(txtRazaoSocial.getText());
-        c.setNomeFantasia(txtNomeFantasia.getText());
-        c.setCnpj(txtCnpj.getText().replaceAll("\\D", ""));
-        c.setIe(txtIe.getText().replaceAll("\\D", ""));
 
-        c.setTelefone(txtTelefone.getText().replaceAll("\\D", ""));
+    private Cliente criar() {
+        Cliente c = new Cliente();
+        c.setTipoPessoa("J");
+        c.setNomeRazaoSocial(txtRazaoSocial.getText());
+        c.setNomeFantasia(txtNomeFantasia.getText());
+        c.setDocumento(somenteNumeros(txtCnpj.getText()));
+        c.setRgInscricaoEstadual(txtIe.getText());
+        c.setTelefone(somenteNumeros(txtTelefone.getText()));
         c.setEmail(txtEmail.getText());
         c.setEndereco(txtEndereco.getText());
         c.setNumero(txtNumero.getText());
@@ -342,30 +347,29 @@ private boolean validarCNPJ(String cnpj) {
         c.setBairro(txtBairro.getText());
         c.setCidade(txtCidade.getText());
         c.setUf(txtUf.getText());
-        c.setCep(txtCep.getText().replaceAll("\\D", ""));
+        c.setCep(somenteNumeros(txtCep.getText()));
         c.setLimiteCredito(parseBig(txtLimiteCredito.getText()));
-
         return c;
     }
-    //====================================
-    private void preencherCampos(Clientepj c) {
+
+    private void preencherCampos(Cliente c) {
         txtId.setText(String.valueOf(c.getId()));
-        txtRazaoSocial.setText(c.getRazaoSocial());
+        txtRazaoSocial.setText(c.getNomeRazaoSocial());
         txtNomeFantasia.setText(c.getNomeFantasia());
-        txtIe.setText(c.getIe());
-        txtCnpj.setText(c.getCnpj());      // máscara aplicada automaticamente
+        txtIe.setText(c.getRgInscricaoEstadual());
+        txtCnpj.setText(c.getDocumento());
         txtTelefone.setText(c.getTelefone());
         txtEmail.setText(c.getEmail());
         txtEndereco.setText(c.getEndereco());
         txtNumero.setText(c.getNumero());
+        txtComplemento.setText(c.getComplemento());
         txtBairro.setText(c.getBairro());
         txtCidade.setText(c.getCidade());
         txtUf.setText(c.getUf());
         txtCep.setText(c.getCep());
         txtLimiteCredito.setValue(c.getLimiteCredito());
     }
-    //================================================
-    //===Validar
+
     private boolean validar() {
         if (txtRazaoSocial.getText().isBlank()) {
             JOptionPane.showMessageDialog(this, "Razão Social é obrigatória.");
@@ -375,9 +379,13 @@ private boolean validarCNPJ(String cnpj) {
             JOptionPane.showMessageDialog(this, "Cidade é obrigatória.");
             return false;
         }
+        if (!validarCNPJ(somenteNumeros(txtCnpj.getText()))) {
+            JOptionPane.showMessageDialog(this, "CNPJ inválido.");
+            return false;
+        }
         return true;
     }
-    //===
+
     private BigDecimal parseBig(String v) {
         try {
             return new BigDecimal(v.trim().replace(",", "."));
@@ -385,21 +393,17 @@ private boolean validarCNPJ(String cnpj) {
             return BigDecimal.ZERO;
         }
     }
-    //===
 
     private void limparCampos() {
-
         for (Component c : getComponents()) limparRec(c);
     }
-    //===
-    private void limparRec(Component c) {
 
+    private void limparRec(Component c) {
         if (c instanceof JFormattedTextField ft) {
             ft.setValue(null);
         } else if (c instanceof JTextField tf) {
             tf.setText("");
         }
-
         if (c instanceof Container ct) {
             for (Component cc : ct.getComponents()) {
                 limparRec(cc);
@@ -407,12 +411,11 @@ private boolean validarCNPJ(String cnpj) {
         }
     }
 
-    //===
     private void voltar() {
         MainWindow mw = getMainWindow();
         if (mw != null) mw.abrirModulo(new HomeScreen());
     }
-    //===
+
     private MainWindow getMainWindow() {
         Container p = getParent();
         while (p != null) {

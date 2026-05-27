@@ -1,7 +1,6 @@
-
 -- =============================================================================
--- SCRIPT CONSOLIDADO ERP-PDVex-vs1 (VERSÃO INTEGRAL E REFINADA)
--- Data: 08/05/2026
+-- SCRIPT CONSOLIDADO ERP-PDVex-vs1 (VERSÃO INTEGRAL E REFINADA - CLIENTES UNIFICADOS)
+-- Data: Atualizado com Tabela Única de Clientes
 -- =============================================================================
 
 -- CRIA O BANCO DE DADOS PADRÃO PARA CARACTERES E ACENTUAÇÃO BRASILEIROS
@@ -14,7 +13,6 @@
 --------------------------------------------------------------------------------
 -- 1. TABELAS SEM DEPENDÊNCIAS (TABELAS PAI)
 --------------------------------------------------------------------------------
-
 
 -- Configuração da Empresa/Estabelecimento
 CREATE TABLE IF NOT EXISTS public.tabela_estabelecimento (
@@ -50,40 +48,23 @@ CREATE TABLE IF NOT EXISTS public.tabela_usuarios (
     ativo BOOLEAN DEFAULT TRUE
 );
 
--- Cadastro de Clientes (Pessoa Física)
+-- Cadastro Unificado de Clientes (Substitui as antigas tabelas PF e PJ)
 CREATE TABLE IF NOT EXISTS public.tabela_clientes (
     id BIGSERIAL PRIMARY KEY,
-    nome VARCHAR(100) NOT NULL,
-    cpf VARCHAR(11) NOT NULL UNIQUE,
-    rg VARCHAR(20),
-    telefone VARCHAR(15),
-    email VARCHAR(100),
-    endereco VARCHAR(150),
-    numero VARCHAR(10),
-    bairro VARCHAR(50),
-    cidade VARCHAR(50) NOT NULL,
-    uf CHAR(2),
-    cep VARCHAR(8),
-    limite_credito NUMERIC(10,2) DEFAULT 0.00,
-    data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Cadastro de Clientes (Pessoa Jurídica)
-CREATE TABLE IF NOT EXISTS public.tabela_clientes_pj (
-    id BIGSERIAL PRIMARY KEY,
-    razao_social VARCHAR(150) NOT NULL,
-    nome_fantasia VARCHAR(150),
-    cnpj VARCHAR(14) NOT NULL UNIQUE,
-    ie VARCHAR(30),
-    telefone VARCHAR(11),
+    tipo_pessoa CHAR(1) NOT NULL CHECK (tipo_pessoa IN ('F', 'J')), -- 'F' = Física, 'J' = Jurídica
+    nome_razao_social VARCHAR(150) NOT NULL, -- Nome ou Razão Social
+    nome_fantasia VARCHAR(150),              -- Nome Fantasia (opcional, para PJ)
+    documento VARCHAR(18) NOT NULL UNIQUE,   -- CPF ou CNPJ padronizados para aceitar máscaras
+    rg_inscricao_estadual VARCHAR(30),       -- RG ou Inscrição Estadual
+    telefone VARCHAR(20),                     -- Tamanho ampliado para suportar máscaras
     email VARCHAR(150),
     endereco VARCHAR(150),
-    numero VARCHAR(20),
+    numero VARCHAR(20),                      -- Tamanho unificado baseado na tabela PJ antiga
     complemento VARCHAR(20),
-    bairro VARCHAR(100),
-    cidade VARCHAR(100) NOT NULL,
+    bairro VARCHAR(100),                     -- Tamanho unificado baseado na tabela PJ antiga
+    cidade VARCHAR(100) NOT NULL,            -- Tamanho unificado baseado na tabela PJ antiga
     uf CHAR(2),
-    cep VARCHAR(8),
+    cep VARCHAR(10),                         -- Tamanho ampliado para aceitar o hífen da máscara
     limite_credito NUMERIC(12,2) DEFAULT 0.00,
     data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -159,12 +140,12 @@ CREATE TABLE IF NOT EXISTS public.tabela_caixas (
     id_usuario BIGINT REFERENCES public.tabela_usuarios(id)
 );
 
--- Tabela Principal de Vendas
+-- Tabela Principal de Vendas (ESTRUTURA ORIGINAL COMPLETA E PRESERVADA)
 CREATE TABLE IF NOT EXISTS public.tabela_vendas (
     id_venda BIGSERIAL PRIMARY KEY,
     data_venda TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     id_usuario BIGINT NOT NULL REFERENCES public.tabela_usuarios(id),
-    id_cliente BIGINT REFERENCES public.tabela_clientes(id),
+    id_cliente BIGINT REFERENCES public.tabela_clientes(id) ON DELETE RESTRICT, -- Atualizado para a tabela unificada
     nome_cliente_avulso VARCHAR(150),
     cpf_avulso VARCHAR(20),
     total_bruto NUMERIC(10,2) NOT NULL,
@@ -181,7 +162,7 @@ CREATE TABLE IF NOT EXISTS public.tabela_vendas (
     CONSTRAINT chk_valores_venda CHECK (total_bruto >= 0 AND total_liquido >= 0)
 );
 
--- Itens da Venda (Mantendo todos os campos fiscais de momento)
+-- Itens da Venda
 CREATE TABLE IF NOT EXISTS public.tabela_itens_venda (
     id_item BIGSERIAL PRIMARY KEY,
     id_venda BIGINT NOT NULL REFERENCES public.tabela_vendas(id_venda) ON DELETE CASCADE,
@@ -202,27 +183,27 @@ CREATE TABLE IF NOT EXISTS public.tabela_itens_venda (
     cofins_valor_momento NUMERIC(10,2) DEFAULT 0.00
 );
 
+-- Documentos Fiscais
 CREATE TABLE IF NOT EXISTS public.tabela_documentos_fiscais (
-	id_documento BIGSERIAL PRIMARY KEY,
-	id_venda BIGINT NOT NULL REFERENCES public.tabela_vendas(id_venda) ON DELETE CASCADE,
-	modelo VARCHAR(10) NOT NULL DEFAULT 'NFCE',
-	status VARCHAR(30) NOT NULL DEFAULT 'PENDENTE_EMISSAO',
-	ambiente VARCHAR(20) NOT NULL DEFAULT 'HOMOLOGACAO',
-	modo_emissao VARCHAR(30) NOT NULL DEFAULT 'NORMAL',
-	serie INTEGER,
-	numero BIGINT,
-	chave_acesso VARCHAR(44),
-	protocolo_autorizacao VARCHAR(50),
-	xml_gerado TEXT,
-	xml_assinado TEXT,
-	xml_autorizado TEXT,
-	motivo_rejeicao TEXT,
-	data_emissao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-	data_autorizacao TIMESTAMP,
-	data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-	data_atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    id_documento BIGSERIAL PRIMARY KEY,
+    id_venda BIGINT NOT NULL REFERENCES public.tabela_vendas(id_venda) ON DELETE CASCADE,
+    modelo VARCHAR(10) NOT NULL DEFAULT 'NFCE',
+    status VARCHAR(30) NOT NULL DEFAULT 'PENDENTE_EMISSAO',
+    ambiente VARCHAR(20) NOT NULL DEFAULT 'HOMOLOGACAO',
+    modo_emissao VARCHAR(30) NOT NULL DEFAULT 'NORMAL',
+    serie INTEGER,
+    numero BIGINT,
+    chave_acesso VARCHAR(44),
+    protocolo_autorizacao VARCHAR(50),
+    xml_gerado TEXT,
+    xml_assinado TEXT,
+    xml_autorizado TEXT,
+    motivo_rejeicao TEXT,
+    data_emissao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    data_autorizacao TIMESTAMP,
+    data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    data_atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT uk_documento_fiscal_venda_modelo UNIQUE (id_venda, modelo)
-
 );
 
 ALTER TABLE public.tabela_documentos_fiscais
@@ -232,7 +213,6 @@ ALTER TABLE public.tabela_documentos_fiscais
     ADD COLUMN IF NOT EXISTS data_autorizacao TIMESTAMP;
 
 -- Compatibilidade para bancos criados por versões anteriores do sistema.
--- CREATE TABLE IF NOT EXISTS não altera uma tabela que já existe.
 ALTER TABLE public.tabela_itens_venda
     ADD COLUMN IF NOT EXISTS icms_aliquota_momento NUMERIC(5,2) DEFAULT 0.00;
 
@@ -274,6 +254,10 @@ CREATE TABLE IF NOT EXISTS public.tabela_movimentacoes_estoque (
 --------------------------------------------------------------------------------
 -- 3. ÍNDICES (UNIFICAÇÃO DAS DUAS VERSÕES)
 --------------------------------------------------------------------------------
+
+-- Clientes (Novos Índices para Busca Otimizada na Tabela Única)
+CREATE INDEX IF NOT EXISTS idx_clientes_nome_razao ON public.tabela_clientes (nome_razao_social);
+CREATE INDEX IF NOT EXISTS idx_clientes_documento ON public.tabela_clientes (documento);
 
 -- Fornecedores
 CREATE INDEX IF NOT EXISTS idx_fornecedor_razao ON public.tabela_fornecedores (razao_social);
