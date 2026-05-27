@@ -15,7 +15,7 @@ import java.util.List;
  * Centraliza as operações JDBC para persistência de Clientes PF e PJ.
  * 
  * @author Peracio Dias
- * @version 2.0
+ * @version 2.2
  * @since 2026-05-26
  */
 public class ClienteDAO {
@@ -26,13 +26,18 @@ public class ClienteDAO {
             (tipo_pessoa, nome_razao_social, nome_fantasia, documento, rg_inscricao_estadual, 
              telefone, email, endereco, numero, complemento, bairro, cidade, uf, cep, limite_credito) 
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            RETURNING id
         """;
 
         try (Connection conn = Conexao.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             preencherStatement(c, stmt);
-            stmt.executeUpdate();
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    c.setId(rs.getLong("id"));
+                }
+            }
         }
     }
 
@@ -50,7 +55,10 @@ public class ClienteDAO {
 
             preencherStatement(c, stmt);
             stmt.setLong(16, c.getId());
-            stmt.executeUpdate();
+            int affected = stmt.executeUpdate();
+            if (affected == 0) {
+                throw new SQLException("Nenhum cliente encontrado com o ID: " + c.getId());
+            }
         }
     }
 

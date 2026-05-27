@@ -15,7 +15,7 @@ import java.util.List;
  * Faz a ponte entre o Domínio e a Infraestrutura de persistência.
  * 
  * @author Peracio Dias
- * @version 2.0
+ * @version 2.1
  * @since 2026-05-26
  */
 public class ClienteRepositoryJdbcAdapter implements ClienteRepository {
@@ -36,7 +36,7 @@ public class ClienteRepositoryJdbcAdapter implements ClienteRepository {
             }
             return cliente;
         } catch (SQLException e) {
-            throw new RuntimeException("Erro ao salvar cliente", e);
+            throw new RuntimeException("Erro no banco de dados: " + e.getMessage(), e);
         }
     }
 
@@ -45,7 +45,7 @@ public class ClienteRepositoryJdbcAdapter implements ClienteRepository {
         try {
             dao.excluir(id);
         } catch (SQLException e) {
-            throw new RuntimeException("Erro ao excluir cliente", e);
+            throw new RuntimeException("Erro ao excluir cliente: " + e.getMessage(), e);
         }
     }
 
@@ -54,7 +54,7 @@ public class ClienteRepositoryJdbcAdapter implements ClienteRepository {
         try {
             return dao.buscarPorId(id);
         } catch (SQLException e) {
-            throw new RuntimeException("Erro ao buscar cliente por ID", e);
+            throw new RuntimeException("Erro ao buscar cliente por ID: " + e.getMessage(), e);
         }
     }
 
@@ -63,7 +63,7 @@ public class ClienteRepositoryJdbcAdapter implements ClienteRepository {
         try {
             return dao.buscarPorDocumento(documento);
         } catch (SQLException e) {
-            throw new RuntimeException("Erro ao buscar cliente por documento", e);
+            throw new RuntimeException("Erro ao buscar cliente por documento: " + e.getMessage(), e);
         }
     }
 
@@ -72,7 +72,7 @@ public class ClienteRepositoryJdbcAdapter implements ClienteRepository {
         try {
             return dao.buscarPorNomeRazaoSocial(nome);
         } catch (SQLException e) {
-            throw new RuntimeException("Erro ao buscar clientes por nome", e);
+            throw new RuntimeException("Erro ao buscar clientes por nome: " + e.getMessage(), e);
         }
     }
 

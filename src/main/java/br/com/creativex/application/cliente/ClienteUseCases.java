@@ -16,7 +16,7 @@ import java.util.List;
  * Centraliza a lógica de negócio e orquestra chamadas ao repositório.
  * 
  * @author Peracio Dias
- * @version 2.0
+ * @version 2.1
  * @since 2026-05-26
  */
 public class ClienteUseCases {
@@ -27,7 +27,25 @@ public class ClienteUseCases {
         this.repo = repo;
     }
 
+    /**
+     * Salva ou atualiza um cliente, verificando se o documento já existe.
+     * 
+     * @param cliente Cliente a ser salvo
+     * @return Cliente salvo
+     * @throws RuntimeException se o documento já estiver cadastrado para outro cliente
+     */
     public Cliente save(Cliente cliente) {
+        // Validação de documento duplicado
+        Cliente existente = repo.findByDocumento(cliente.getDocumento());
+        if (existente != null) {
+            // Se for novo cadastro (id null) ou se o ID encontrado for diferente do atual
+            if (cliente.getId() == null || !existente.getId().equals(cliente.getId())) {
+                String tipo = existente.isPessoaJuridica() ? "CNPJ" : "CPF";
+                throw new RuntimeException("Este " + tipo + " já está cadastrado para o cliente: " 
+                        + existente.getNomeRazaoSocial());
+            }
+        }
+        
         return repo.save(cliente);
     }
 

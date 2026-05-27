@@ -3,12 +3,13 @@ package br.com.creativex.ui.components;
 import javax.swing.*;
 import javax.swing.text.*;
 import java.awt.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
- * Biblioteca JacobTextField v1
+ * Biblioteca JacobTextField v1.1
  * Componente Swing focado em campos de texto COBOL (PIC A e PIC X).
+ * 
+ * @author Peracio Dias
+ * @version 1.1
  */
 public class JacobTextField extends JTextField {
 
@@ -16,6 +17,7 @@ public class JacobTextField extends JTextField {
 
     private final TipoTexto tipo;
     private final int tamanhoMaximo;
+    private boolean forcarMaiusculas = true;
 
     /**
      * Construtor Privado - Força o uso da fábrica estática
@@ -41,6 +43,14 @@ public class JacobTextField extends JTextField {
     }
 
     /**
+     * Define se o campo deve forçar a conversão para maiúsculas.
+     * @param forcar true para forçar maiúsculas, false para manter digitação original
+     */
+    public void setForcarMaiusculas(boolean forcar) {
+        this.forcarMaiusculas = forcar;
+    }
+
+    /**
      * Fábrica estática que interpreta máscaras textuais do COBOL.
      * Suporta formatos como "A(30)", "AAAAA", "X(15)", "X(10)XX"
      */
@@ -52,7 +62,6 @@ public class JacobTextField extends JTextField {
         String pic = picture.toUpperCase().trim();
 
         // Valida se segue um padrão puro: X(n), A(n), XXXX ou AAAA
-        // Rejeita misturas como X(10)XX
         if (!pic.matches("^A\\(\\d+\\)$|^A+$|^X\\(\\d+\\)$|^X+$")) {
             throw new IllegalArgumentException("Formato de PICTURE de texto inválido ou misto: " + picture);
         }
@@ -125,12 +134,14 @@ public class JacobTextField extends JTextField {
                 // PIC A: Mantém apenas letras (incluindo acentuações básicas) e espaços
                 textoFiltrado = textoInserido.replaceAll("[^a-zA-ZáàâãéèêíïóôõöúçñÁÀÂÃÉÈÊÍÏÓÔÕÖÚÇÑ ]", "");
             } else {
-                // PIC X: Alfanumérico puro, aceita tudo, monitora apenas o tamanho
+                // PIC X: Alfanumérico puro, aceita tudo
                 textoFiltrado = textoInserido;
             }
 
-            // Força todas as letras para Maiúsculas
-            textoFiltrado = textoFiltrado.toUpperCase();
+            // Aplica conversão para maiúsculas apenas se habilitado
+            if (forcarMaiusculas) {
+                textoFiltrado = textoFiltrado.toUpperCase();
+            }
 
             // Validação de estouro de tamanho (Teto Máximo do Buffer)
             int comprimentoAtual = fb.getDocument().getLength();

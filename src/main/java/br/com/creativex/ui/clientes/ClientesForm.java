@@ -8,6 +8,7 @@ package br.com.creativex.ui.clientes;
 import br.com.creativex.domain.entity.cliente.Cliente;
 import br.com.creativex.ui.HomeScreen;
 import br.com.creativex.ui.MainWindow;
+import br.com.creativex.ui.components.JacobTextField;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -61,23 +62,24 @@ public class ClientesForm extends JPanel {
         txtId.setEditable(false);
         addCampo(p, "ID", txtId);
         
-        txtNome = new JTextField(); addCampo(p, "Nome Completo*", txtNome);
-        txtRg = new JTextField(); addCampo(p, "RG", txtRg);
+        txtNome = JacobTextField.criarPorPicture("X(150)"); addCampo(p, "Nome Completo*", txtNome);
+        txtRg = JacobTextField.criarPorPicture("X(30)"); addCampo(p, "RG", txtRg);
         
         txtCpf = new JFormattedTextField(criarMascara("###.###.###-##")); addCampo(p, "CPF*", txtCpf);
         txtTelefone = new JFormattedTextField(criarMascara("(##) #####-####")); addCampo(p, "Telefone", txtTelefone);
         
-        txtEmail = new JTextField(); addCampo(p, "Email", txtEmail);
+        txtEmail = JacobTextField.criarPorPicture("X(150)");
+        ((JacobTextField)txtEmail).setForcarMaiusculas(false);
+        addCampo(p, "Email", txtEmail);
+        
         txtCep = new JFormattedTextField(criarMascara("#####-###")); addCampo(p, "CEP (Busca Automática)", txtCep);
-        txtEndereco = new JTextField(); addCampo(p, "Logradouro", txtEndereco);
+        txtEndereco = JacobTextField.criarPorPicture("X(150)"); addCampo(p, "Logradouro", txtEndereco);
         
-        txtNumero = new JTextField();
-        applyNumericFilter(txtNumero);
-        addCampo(p, "Número", txtNumero);
+        txtNumero = JacobTextField.criarPorPicture("X(20)"); addCampo(p, "Número", txtNumero);
         
-        txtBairro = new JTextField(); addCampo(p, "Bairro", txtBairro);
-        txtCidade = new JTextField(); addCampo(p, "Cidade*", txtCidade);
-        txtUf = new JTextField(); addCampo(p, "UF", txtUf);
+        txtBairro = JacobTextField.criarPorPicture("X(100)"); addCampo(p, "Bairro", txtBairro);
+        txtCidade = JacobTextField.criarPorPicture("X(100)"); addCampo(p, "Cidade*", txtCidade);
+        txtUf = JacobTextField.criarPorPicture("XX"); addCampo(p, "UF", txtUf);
         
         txtLimiteCredito = new JFormattedTextField();
         txtLimiteCredito.setValue(BigDecimal.ZERO);
@@ -207,7 +209,7 @@ public class ClientesForm extends JPanel {
         if (!validarForm()) return;
         try {
             Cliente c = criarObjetoCliente();
-            c.setId(Long.parseLong(txtId.getText().trim()));
+            c.setId(Long.parseLong(somenteNumeros(txtId.getText())));
             controller.save(c);
             JOptionPane.showMessageDialog(this, "Cliente atualizado com sucesso!");
             listar();
@@ -246,6 +248,7 @@ public class ClientesForm extends JPanel {
     private boolean validarForm() {
         if (txtNome.getText().isBlank()) return msgErro("Nome é obrigatório.");
         if (!validarCPF(somenteNumeros(txtCpf.getText()))) return msgErro("CPF inválido.");
+        if (txtCidade.getText().isBlank()) return msgErro("Cidade é obrigatória.");
         return true;
     }
 

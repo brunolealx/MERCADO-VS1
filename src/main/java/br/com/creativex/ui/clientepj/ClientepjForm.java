@@ -9,6 +9,7 @@ import br.com.creativex.domain.entity.cliente.Cliente;
 import br.com.creativex.presentation.controller.ClienteController;
 import br.com.creativex.ui.HomeScreen;
 import br.com.creativex.ui.MainWindow;
+import br.com.creativex.ui.components.JacobTextField;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -76,12 +77,10 @@ public class ClientepjForm extends JPanel {
         txtId.setEnabled(false);
         addCampo(p, "ID", txtId);
         
-        txtRazaoSocial = new JTextField(); addCampo(p, "Razão Social*", txtRazaoSocial);
-        txtNomeFantasia = new JTextField(); addCampo(p, "Nome Fantasia", txtNomeFantasia);
+        txtRazaoSocial = JacobTextField.criarPorPicture("X(150)"); addCampo(p, "Razão Social*", txtRazaoSocial);
+        txtNomeFantasia = JacobTextField.criarPorPicture("X(150)"); addCampo(p, "Nome Fantasia", txtNomeFantasia);
         
-        txtIe = new JTextField();
-        applyNumericFilter(txtIe);
-        addCampo(p, "Inscrição Estadual", txtIe);
+        txtIe = JacobTextField.criarPorPicture("X(30)"); addCampo(p, "Inscrição Estadual", txtIe);
         
         txtCnpj = new JFormattedTextField(criarMascara("##.###.###/####-##"));
         addCampo(p, "CNPJ*", txtCnpj);
@@ -89,17 +88,18 @@ public class ClientepjForm extends JPanel {
         txtTelefone = new JFormattedTextField(criarMascara("(##) #####-####"));
         addCampo(p, "Telefone", txtTelefone);
 
-        txtEmail = new JTextField(); addCampo(p, "Email", txtEmail);
-        txtEndereco = new JTextField(); addCampo(p, "Endereço", txtEndereco);
+        txtEmail = JacobTextField.criarPorPicture("X(150)");
+        ((JacobTextField)txtEmail).setForcarMaiusculas(false);
+        addCampo(p, "Email", txtEmail);
         
-        txtNumero = new JTextField();
-        applyNumericFilter(txtNumero);
-        addCampo(p, "Número", txtNumero);
+        txtEndereco = JacobTextField.criarPorPicture("X(150)"); addCampo(p, "Endereço", txtEndereco);
         
-        txtComplemento = new JTextField(); addCampo(p, "Complemento", txtComplemento);
-        txtBairro = new JTextField(); addCampo(p, "Bairro", txtBairro);
-        txtCidade = new JTextField(); addCampo(p, "Cidade*", txtCidade);
-        txtUf = new JTextField(); addCampo(p, "UF", txtUf);
+        txtNumero = JacobTextField.criarPorPicture("X(20)"); addCampo(p, "Número", txtNumero);
+        
+        txtComplemento = JacobTextField.criarPorPicture("X(20)"); addCampo(p, "Complemento", txtComplemento);
+        txtBairro = JacobTextField.criarPorPicture("X(100)"); addCampo(p, "Bairro", txtBairro);
+        txtCidade = JacobTextField.criarPorPicture("X(100)"); addCampo(p, "Cidade*", txtCidade);
+        txtUf = JacobTextField.criarPorPicture("XX"); addCampo(p, "UF", txtUf);
         
         txtCep = new JFormattedTextField(criarMascara("#####-###"));
         addCampo(p, "CEP", txtCep);
@@ -242,7 +242,7 @@ public class ClientepjForm extends JPanel {
         }
         try {
             Cliente c = criar();
-            c.setId(Long.parseLong(txtId.getText().trim()));
+            c.setId(Long.parseLong(somenteNumeros(txtId.getText())));
             controller.save(c);
             JOptionPane.showMessageDialog(this, "Cliente PJ atualizado!");
             listar();
