@@ -8,10 +8,10 @@ import br.com.creativex.ui.login.LoginForm;
 import javax.swing.UIManager;
 /**
  * Classe principal de inicialização da aplicação ERP-PDVex-vs1.
- * 
+ *
  * Responsável pelo ponto de entrada da aplicação, configuração do tema visual
  * (Look and Feel) do sistema operacional e inicialização da tela de autenticação.
- * 
+ *
  * @author Peracio Dias
  * @version 1.0
  * @since 2026-02-01
@@ -19,10 +19,10 @@ import javax.swing.UIManager;
 public class Main {
     /**
      * Método principal da aplicação.
-     * 
+     *
      * Inicializa o look and feel com as cores do sistema operacional e exibe
      * a janela de login (LoginForm) na thread de eventos da aplicação Swing.
-     * 
+     *
      * @param args Argumentos de linha de comando (não utilizados)
      */
     public static void main(String[] args) {

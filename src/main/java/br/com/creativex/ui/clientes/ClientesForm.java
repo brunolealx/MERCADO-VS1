@@ -15,11 +15,14 @@ import javax.swing.text.MaskFormatter;
 import java.awt.*;
 import java.awt.event.*;
 import java.math.BigDecimal;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.List;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import javax.swing.text.NumberFormatter;
 
 public class ClientesForm extends JPanel {
 
@@ -68,7 +71,8 @@ public class ClientesForm extends JPanel {
         txtBairro = new JTextField(); addCampo(p, "Bairro", txtBairro);
         txtCidade = new JTextField(); addCampo(p, "Cidade*", txtCidade);
         txtUf = new JTextField(); addCampo(p, "UF", txtUf);
-        txtLimiteCredito = new JFormattedTextField(); txtLimiteCredito.setValue(BigDecimal.ZERO);
+        txtLimiteCredito = new JFormattedTextField(criarFormatterDecimal());
+        txtLimiteCredito.setValue(BigDecimal.ZERO);
         addCampo(p, "Limite de Crédito (R$)", txtLimiteCredito);
 
         return p;
@@ -296,6 +300,16 @@ public class ClientesForm extends JPanel {
             mf.setValueContainsLiteralCharacters(true);
             return mf;
         } catch (Exception e) { return null; }
+    }
+
+    private NumberFormatter criarFormatterDecimal() {
+        DecimalFormat df = new DecimalFormat("#,##0.00");
+        df.setParseBigDecimal(true);
+        NumberFormatter nf = new NumberFormatter(df);
+        nf.setValueClass(BigDecimal.class);
+        nf.setAllowsInvalid(false);
+        nf.setMinimum(BigDecimal.ZERO);
+        return nf;
     }
 
     private void buscar() {
