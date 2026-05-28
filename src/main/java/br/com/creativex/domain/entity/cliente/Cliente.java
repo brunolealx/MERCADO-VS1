@@ -7,29 +7,34 @@ import java.math.BigDecimal;
 import java.sql.Timestamp;
 
 /**
- * Entidade que representa um cliente pessoa física no sistema ERP-PDVex.
+ * Entidade unificada que representa um cliente (Pessoa Física ou Jurídica) no sistema ERP-PDVex.
  * 
- * Encapsula dados pessoais, de contato, endereço e informações comerciais
- * (limite de crédito) de um cliente. Utilizada para gerenciamento de clientes
- * e operações de vendas.
+ * Encapsula dados de identificação, contato, endereço e informações comerciais.
+ * O campo tipoPessoa ('F' ou 'J') distingue entre PF e PJ.
  * 
  * @author Peracio Dias
- * @version 1.0
- * @since 2026-02-01
+ * @version 2.0
+ * @since 2026-05-26
  */
 public class Cliente {
 
     /** Identificador único do cliente */
     private Long id;
     
-    /** Nome completo do cliente */
-    private String nome;
+    /** Tipo de pessoa: 'F' para Física, 'J' para Jurídica */
+    private String tipoPessoa;
     
-    /** Cadastro de Pessoa Física (CPF) */
-    private String cpf;
+    /** Nome completo ou Razão Social */
+    private String nomeRazaoSocial;
     
-    /** Registro Geral (RG) */
-    private String rg;
+    /** Nome Fantasia (opcional para PJ) */
+    private String nomeFantasia;
+    
+    /** Documento de identificação: CPF ou CNPJ */
+    private String documento;
+    
+    /** RG ou Inscrição Estadual */
+    private String rgInscricaoEstadual;
     
     /** Telefone de contato */
     private String telefone;
@@ -42,6 +47,9 @@ public class Cliente {
     
     /** Número do imóvel */
     private String numero;
+    
+    /** Complemento do endereço */
+    private String complemento;
     
     /** Bairro */
     private String bairro;
@@ -63,30 +71,60 @@ public class Cliente {
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
-    public String getNome() { return nome; }
-    public void setNome(String nome) { this.nome = nome; }
-    public String getCpf() { return cpf; }
-    public void setCpf(String cpf) { this.cpf = cpf; }
-    public String getRg() { return rg; }
-    public void setRg(String rg) { this.rg = rg; }
+    
+    public String getTipoPessoa() { return tipoPessoa; }
+    public void setTipoPessoa(String tipoPessoa) { this.tipoPessoa = tipoPessoa; }
+    
+    public String getNomeRazaoSocial() { return nomeRazaoSocial; }
+    public void setNomeRazaoSocial(String nomeRazaoSocial) { this.nomeRazaoSocial = nomeRazaoSocial; }
+    
+    public String getNomeFantasia() { return nomeFantasia; }
+    public void setNomeFantasia(String nomeFantasia) { this.nomeFantasia = nomeFantasia; }
+    
+    public String getDocumento() { return documento; }
+    public void setDocumento(String documento) { this.documento = documento; }
+    
+    public String getRgInscricaoEstadual() { return rgInscricaoEstadual; }
+    public void setRgInscricaoEstadual(String rgInscricaoEstadual) { this.rgInscricaoEstadual = rgInscricaoEstadual; }
+    
     public String getTelefone() { return telefone; }
     public void setTelefone(String telefone) { this.telefone = telefone; }
+    
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
+    
     public String getEndereco() { return endereco; }
     public void setEndereco(String endereco) { this.endereco = endereco; }
+    
     public String getNumero() { return numero; }
     public void setNumero(String numero) { this.numero = numero; }
+    
+    public String getComplemento() { return complemento; }
+    public void setComplemento(String complemento) { this.complemento = complemento; }
+    
     public String getBairro() { return bairro; }
     public void setBairro(String bairro) { this.bairro = bairro; }
+    
     public String getCidade() { return cidade; }
     public void setCidade(String cidade) { this.cidade = cidade; }
+    
     public String getUf() { return uf; }
     public void setUf(String uf) { this.uf = uf; }
+    
     public String getCep() { return cep; }
     public void setCep(String cep) { this.cep = cep; }
+    
     public BigDecimal getLimiteCredito() { return limiteCredito; }
     public void setLimiteCredito(BigDecimal limiteCredito) { this.limiteCredito = limiteCredito; }
+    
     public Timestamp getDataCadastro() { return dataCadastro; }
     public void setDataCadastro(Timestamp dataCadastro) { this.dataCadastro = dataCadastro; }
+    
+    /**
+     * Verifica se o cliente é uma pessoa jurídica.
+     * @return true se for PJ, false se for PF
+     */
+    public boolean isPessoaJuridica() {
+        return "J".equalsIgnoreCase(tipoPessoa);
+    }
 }

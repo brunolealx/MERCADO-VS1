@@ -21,54 +21,75 @@ O projeto foi reorganizado para separar regras de negócio, casos de uso, adapte
 `infrastructure` implementa portas do `domain` e é montada pelo `config/AppFactory`.
 
 ### Estrutura de pacotes
-.
-├── application
-│   ├── caixa
-│   ├── cliente
-│   ├── clientepj
-│   ├── fornecedor
-│   ├── produto
-│   ├── usecase
-│   │   └── core
-│   └── usuario
-├── config
-├── db
-├── domain
-│   ├── entity
-│   │   ├── cliente
-│   │   ├── clientepj
-│   │   ├── fornecedor
-│   │   ├── produto
-│   │   ├── usuario
-│   │   └── venda
-│   ├── repository
-│   └── transaction
-├── infrastructure
-│   ├── persistence
-│   │   └── repository
-│   │       ├── caixa
-│   │       ├── cliente
-│   │       ├── clientepj
-│   │       ├── fornecedor
-│   │       ├── produto
-│   │       └── usuario
-│   └── transaction
-├── presentation
-│   └── controller
-├── ui
-│   ├── ajuda
-│   ├── cadastrousuario
-│   ├── caixas
-│   ├── clientepj
-│   ├── clientes
-│   ├── estoque
-│   ├── fornecedor
-│   ├── impressoras
-│   ├── listagens
-│   ├── login
-│   └── produtos
-└── util
+# Estrutura do Projeto
 
+## Application
+- Caixa
+- Cliente
+- Cliente PJ
+- Fornecedor
+- Produto
+- UseCase
+  - Core
+- Usuário
+
+## Config
+- Configurações gerais do sistema
+
+## DB
+- Banco de dados e scripts
+
+## Domain
+
+### Entity
+- Cliente
+- Cliente PJ
+- Fornecedor
+- Produto
+- Usuário
+- Venda
+
+### Repository
+- Interfaces de repositório
+
+### Transaction
+- Controle transacional
+
+## Infrastructure
+
+### Persistence
+
+#### Repository
+- Caixa
+- Cliente
+- Cliente PJ
+- Fornecedor
+- Produto
+- Usuário
+
+### Transaction
+- Gerenciamento de transações
+
+## Presentation
+
+### Controller
+- Controladores da aplicação
+
+## UI
+- Ajuda
+- Cadastro de Usuário
+- Caixas
+- Cliente PJ
+- Clientes
+- Estoque
+- Fornecedor
+- Impressoras
+- Listagens
+- Login
+- Produtos
+
+## Util
+- Utilitários e funções auxiliares
 ```
 
 ## Tecnologias
@@ -113,6 +134,6 @@ mvn test
 ```
 Observação: em alguns ambientes Linux/JDK 21 o Mockito pode exigir ajuste de mock maker/agent para execução dos testes.
 
-## Autor
+## Autores
 
-Perácio Dias
+Bruno Leal e Peracio Dias

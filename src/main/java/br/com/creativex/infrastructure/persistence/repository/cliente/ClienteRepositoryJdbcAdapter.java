@@ -5,73 +5,83 @@ package br.com.creativex.infrastructure.persistence.repository.cliente;
 
 import br.com.creativex.domain.entity.cliente.Cliente;
 import br.com.creativex.domain.repository.ClienteRepository;
-
+import java.sql.SQLException;
+import java.util.Collections;
 import java.util.List;
 
+/**
+ * Adapter que implementa o ClienteRepository utilizando JDBC via ClienteDAO.
+ * 
+ * Faz a ponte entre o Domínio e a Infraestrutura de persistência.
+ * 
+ * @author Peracio Dias
+ * @version 2.1
+ * @since 2026-05-26
+ */
 public class ClienteRepositoryJdbcAdapter implements ClienteRepository {
 
-    private final ClienteDAO clienteDAO;
+    private final ClienteDAO dao;
 
-    public ClienteRepositoryJdbcAdapter(ClienteDAO clienteDAO) {
-        this.clienteDAO = clienteDAO;
+    public ClienteRepositoryJdbcAdapter(ClienteDAO dao) {
+        this.dao = dao;
     }
 
     @Override
     public Cliente save(Cliente cliente) {
         try {
-            if (cliente.getId() == null) {
-                clienteDAO.inserir(cliente);
+            if (cliente.getId() == null || cliente.getId() == 0) {
+                dao.inserir(cliente);
             } else {
-                clienteDAO.atualizar(cliente);
+                dao.atualizar(cliente);
             }
             return cliente;
-        } catch (Exception e) {
-            throw new RuntimeException("Erro ao salvar cliente", e);
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro no banco de dados: " + e.getMessage(), e);
         }
     }
 
     @Override
     public void deleteById(long id) {
         try {
-            clienteDAO.excluir(id);
-        } catch (Exception e) {
-            throw new RuntimeException("Erro ao excluir cliente", e);
+            dao.excluir(id);
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao excluir cliente: " + e.getMessage(), e);
         }
     }
 
     @Override
     public Cliente findById(long id) {
         try {
-            return clienteDAO.buscarPorId(id);
-        } catch (Exception e) {
-            throw new RuntimeException("Erro ao buscar cliente por ID", e);
+            return dao.buscarPorId(id);
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao buscar cliente por ID: " + e.getMessage(), e);
         }
     }
 
     @Override
-    public Cliente findByCpf(String cpf) {
+    public Cliente findByDocumento(String documento) {
         try {
-            return clienteDAO.buscarPorCpf(cpf);
-        } catch (Exception e) {
-            throw new RuntimeException("Erro ao buscar cliente por CPF", e);
+            return dao.buscarPorDocumento(documento);
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao buscar cliente por documento: " + e.getMessage(), e);
         }
     }
 
     @Override
-    public List<Cliente> findByName(String nome) {
+    public List<Cliente> findByNomeRazaoSocial(String nome) {
         try {
-            return clienteDAO.buscarPorNome(nome);
-        } catch (Exception e) {
-            throw new RuntimeException("Erro ao buscar cliente por nome", e);
+            return dao.buscarPorNomeRazaoSocial(nome);
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao buscar clientes por nome: " + e.getMessage(), e);
         }
     }
 
     @Override
     public List<Cliente> findByIdLimit(long idInicial, int limite) {
         try {
-            return clienteDAO.listarPorIdLimite(idInicial, limite);
-        } catch (Exception e) {
-            throw new RuntimeException("Erro ao listar clientes", e);
+            return dao.listarPorIdLimite(idInicial, limite);
+        } catch (SQLException e) {
+            return Collections.emptyList();
         }
     }
 }

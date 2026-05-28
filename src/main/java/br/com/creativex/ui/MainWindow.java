@@ -10,6 +10,7 @@ import br.com.creativex.ui.produtos.ProdutoForm;
 import br.com.creativex.ui.estoque.EstoqueForm;
 import br.com.creativex.ui.clientes.ClientesForm;
 import br.com.creativex.ui.clientepj.ClientepjForm;
+import br.com.creativex.ui.config.EstabelecimentoForm;
 import br.com.creativex.ui.fornecedor.FornecedoresForm;
 import br.com.creativex.ui.caixas.CaixasForm;
 import br.com.creativex.ui.ajuda.AjudaForm;
@@ -75,6 +76,7 @@ public class MainWindow extends JFrame {
         JButton btnCaixas = new JButton("Caixas");
         JButton btnConsultaVendas = new JButton("Consulta Vendas");
         JButton btnImpressoras = new JButton("Impressoras");
+        JButton btnConfig = new JButton("Configurações");
         JButton btnAjuda = new JButton("Ajuda");
         JButton btnSairSistema = new JButton("Sair do sistema");
 
@@ -88,6 +90,7 @@ public class MainWindow extends JFrame {
         menu.add(btnCaixas);
         menu.add(btnConsultaVendas);
         menu.add(btnImpressoras);
+        menu.add(btnConfig);
         menu.add(btnAjuda);
         menu.add(btnSairSistema);
 
@@ -106,6 +109,12 @@ public class MainWindow extends JFrame {
 
         btnImpressoras.addActionListener(e ->
                 JOptionPane.showMessageDialog(this, "Módulo Impressoras em desenvolvimento"));
+
+        btnConfig.addActionListener(e -> {
+            EstabelecimentoForm form = new EstabelecimentoForm(this);
+            form.setVisible(true);
+        });
+
         btnAjuda.addActionListener(e -> abrirModulo(new AjudaForm()));
         btnSairSistema.addActionListener(e -> confirmarSaida());
 
