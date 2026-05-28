@@ -83,6 +83,7 @@ public class EstabelecimentoForm extends JDialog {
             Estabelecimento est = dao.carregarDados();
             if (est != null) {
                 txtRazaoSocial.setText(est.getRazaoSocial());
+                txtNomeFantasia.setText(est.getNomeFantasia());
                 txtCnpj.setText(est.getCnpj());
                 txtIE.setText(est.getInscricaoEstadual());
                 txtLogradouro.setText(est.getLogradouro());
@@ -104,6 +105,7 @@ public class EstabelecimentoForm extends JDialog {
         try {
             Estabelecimento est = new Estabelecimento();
             est.setRazaoSocial(txtRazaoSocial.getText());
+            est.setNomeFantasia(txtNomeFantasia.getText());
             est.setCnpj(txtCnpj.getText());
             est.setInscricaoEstadual(txtIE.getText());
             est.setLogradouro(txtLogradouro.getText());

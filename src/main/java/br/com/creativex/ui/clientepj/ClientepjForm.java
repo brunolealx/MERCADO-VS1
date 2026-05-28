@@ -13,9 +13,11 @@ import br.com.creativex.ui.MainWindow;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.text.MaskFormatter;
+import javax.swing.text.NumberFormatter;
 import java.awt.*;
 import java.awt.event.*;
 import java.math.BigDecimal;
+import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.util.List;
 
@@ -83,7 +85,8 @@ public class ClientepjForm extends JPanel {
         txtUf = new JTextField(); addCampo(p, "UF", txtUf);
         txtCep = new JFormattedTextField(criarMascara("#####-###"));
         addCampo(p, "CEP", txtCep);
-        txtLimiteCredito = new JFormattedTextField(); txtLimiteCredito.setValue(BigDecimal.ZERO);
+        txtLimiteCredito = new JFormattedTextField(criarFormatterDecimal());
+        txtLimiteCredito.setValue(BigDecimal.ZERO);
         addCampo(p, "Limite Crédito R$", txtLimiteCredito);
 
         return p;
@@ -114,6 +117,17 @@ public class ClientepjForm extends JPanel {
             throw new RuntimeException(e);
         }
     }
+
+    private NumberFormatter criarFormatterDecimal() {
+        DecimalFormat df = new DecimalFormat("#,##0.00");
+        df.setParseBigDecimal(true);
+        NumberFormatter nf = new NumberFormatter(df);
+        nf.setValueClass(BigDecimal.class);
+        nf.setAllowsInvalid(false);
+        nf.setMinimum(BigDecimal.ZERO);
+        return nf;
+    }
+
     // ================= EVENTOS =================
     private void bindEvents() {
         btnNovo.addActionListener(e -> modoNovo());

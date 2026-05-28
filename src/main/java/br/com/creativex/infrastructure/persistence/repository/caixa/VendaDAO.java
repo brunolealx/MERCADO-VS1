@@ -203,28 +203,12 @@ public class VendaDAO {
 
             conn.commit();
 
-        } catch (Exception e) {
-            if (conn != null) {
-                try {
-                    conn.rollback();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
-            }
-            if (e instanceof SQLException) {
-                throw (SQLException) e;
-            } else {
-                throw new SQLException("Erro inesperado na operação de venda: " + e.getMessage(), e);
-            }
+        } catch (SQLException e) {
+            conn.rollback();
+            throw e;
         } finally {
-            if (conn != null) {
-                try {
-                    conn.setAutoCommit(true);
-                    conn.close();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-            }
+            conn.setAutoCommit(true);
+            conn.close();
         }
     }
 
@@ -339,28 +323,12 @@ public class VendaDAO {
 
             conn.commit();
 
-        } catch (Exception e) {
-            if (conn != null) {
-                try {
-                    conn.rollback();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
-            }
-            if (e instanceof SQLException) {
-                throw (SQLException) e;
-            } else {
-                throw new SQLException("Erro inesperado na operação de venda: " + e.getMessage(), e);
-            }
+        } catch (SQLException e) {
+            conn.rollback();
+            throw e;
         } finally {
-            if (conn != null) {
-                try {
-                    conn.setAutoCommit(true);
-                    conn.close();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-            }
+            conn.setAutoCommit(true);
+            conn.close();
         }
     }
 

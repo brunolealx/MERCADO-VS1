@@ -24,7 +24,7 @@ public class VendaConsultaRepositoryJdbcAdapter implements VendaConsultaReposito
         String sql = """
             SELECT v.id_venda, v.data_venda,
                    u.nome AS usuario,
-                   COALESCE(c.nome_razao_social, v.nome_cliente_avulso, 'NÃO INFORMADO') AS cliente,
+                   COALESCE(c.nome, v.nome_cliente_avulso, 'NÃO INFORMADO') AS cliente,
                    v.total_liquido,
                    v.status
             FROM tabela_vendas v

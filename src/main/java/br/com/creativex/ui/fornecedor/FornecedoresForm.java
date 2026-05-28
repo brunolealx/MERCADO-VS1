@@ -11,7 +11,7 @@ import br.com.creativex.ui.MainWindow;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.text.*;
+import javax.swing.text.MaskFormatter;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -69,16 +69,10 @@ public class FornecedoresForm extends JPanel {
         JPanel p = new JPanel(new GridLayout(18, 1, 6, 6));
         p.setBorder(BorderFactory.createTitledBorder("Cadastro de Fornecedor"));
 
-        txtId = createFormattedField("####################");
-        txtId.setEnabled(false);
-        addCampo(p, "ID", txtId);
-        
+        txtId = new JTextField(); txtId.setEnabled(false); addCampo(p, "ID", txtId);
         txtRazaoSocial = new JTextField(); addCampo(p, "Razão Social*", txtRazaoSocial);
         txtNomeFantasia = new JTextField(); addCampo(p, "Nome Fantasia", txtNomeFantasia);
-        
-        txtIe = new JTextField();
-        applyNumericFilter(txtIe);
-        addCampo(p, "IE", txtIe);
+        txtIe = new JTextField();  addCampo(p, "IE", txtIe);
 
         txtCnpj = new JFormattedTextField(criarMascara("##.###.###/####-##"));
         addCampo(p, "CNPJ*", txtCnpj);
@@ -88,11 +82,7 @@ public class FornecedoresForm extends JPanel {
         addCampo(p, "Telefone", txtTelefone);
         txtEmail = new JTextField(); addCampo(p, "Email", txtEmail);
         txtEndereco = new JTextField(); addCampo(p, "Endereço", txtEndereco);
-        
-        txtNumero = new JTextField();
-        applyNumericFilter(txtNumero);
-        addCampo(p, "Número", txtNumero);
-        
+        txtNumero = new JTextField(); addCampo(p, "Número", txtNumero);
         txtComplemento = new JTextField(); addCampo(p, "Complemento", txtComplemento);
 
         txtBairro = new JTextField(); addCampo(p, "Bairro", txtBairro);
@@ -104,39 +94,9 @@ public class FornecedoresForm extends JPanel {
 
         txtLimiteCredito = new JFormattedTextField();
         txtLimiteCredito.setValue(BigDecimal.ZERO);
-        applyNumericFilter(txtLimiteCredito);
         addCampo(p, "Limite Crédito", txtLimiteCredito);
 
         return p;
-    }
-
-    private JFormattedTextField createFormattedField(String mask) {
-        try {
-            MaskFormatter mf = new MaskFormatter(mask);
-            mf.setPlaceholderCharacter(' ');
-            mf.setValueContainsLiteralCharacters(false);
-            return new JFormattedTextField(mf);
-        } catch (ParseException e) {
-            return new JFormattedTextField();
-        }
-    }
-
-    private void applyNumericFilter(JTextField field) {
-        ((AbstractDocument) field.getDocument()).setDocumentFilter(new DocumentFilter() {
-            @Override
-            public void insertString(FilterBypass fb, int offset, String string, AttributeSet attr) throws BadLocationException {
-                if (string != null && string.matches("[0-9.,]*")) {
-                    super.insertString(fb, offset, string, attr);
-                }
-            }
-
-            @Override
-            public void replace(FilterBypass fb, int offset, int length, String text, AttributeSet attrs) throws BadLocationException {
-                if (text != null && text.matches("[0-9.,]*")) {
-                    super.replace(fb, offset, length, text, attrs);
-                }
-            }
-        });
     }
 
     private JPanel criarPainelBotoes() {
@@ -257,13 +217,13 @@ private String somenteNumeros(String s) { return s == null ? "" : s.replaceAll("
     }
     private void atualizar() {
 
-        if (txtId.getText().trim().isBlank()) {
+        if (txtId.getText().isBlank()) {
             JOptionPane.showMessageDialog(this, "Selecione um fornecedor para atualizar.");
             return;
         }
         try {
             Fornecedor f = criarFornecedor();
-            f.setId(Long.parseLong(txtId.getText().trim()));
+            f.setId(Long.parseLong(txtId.getText()));
 
             controller.save(f);
 
@@ -284,15 +244,15 @@ private String somenteNumeros(String s) { return s == null ? "" : s.replaceAll("
         if (filtro == null || filtro.isBlank()) return;
 
         // remove tudo que não for número
-        String numFiltrado = filtro.replaceAll("\\D", "");
+        String somenteNumeros = filtro.replaceAll("\\D", "");
 
         try {
             model.setRowCount(0);
 
             // ================= BUSCA POR ID =================
-            if (numFiltrado.matches("\\d+") && numFiltrado.length() <= 9) {
+            if (somenteNumeros.matches("\\d+") && somenteNumeros.length() <= 9) {
 
-                Fornecedor f = controller.findById(Long.parseLong(numFiltrado));
+                Fornecedor f = controller.findById(Long.parseLong(somenteNumeros));
                 if (f != null) {
                     preencherCampos(f);
                     modoEdicao(); //  habilita atualização
@@ -303,9 +263,9 @@ private String somenteNumeros(String s) { return s == null ? "" : s.replaceAll("
             }
 
             // ================= BUSCA POR CNPJ =================
-            if (numFiltrado.length() == 14) {
+            if (somenteNumeros.length() == 14) {
 
-                Fornecedor f = controller.findByCnpj(numFiltrado);
+                Fornecedor f = controller.findByCnpj(somenteNumeros);
                 if (f != null) {
                     preencherCampos(f);
                     modoEdicao(); //  habilita atualização
@@ -362,7 +322,7 @@ private String somenteNumeros(String s) { return s == null ? "" : s.replaceAll("
         f.setRazaoSocial(txtRazaoSocial.getText());
         f.setNomeFantasia(txtNomeFantasia.getText());
         f.setCnpj(txtCnpj.getText().replaceAll("\\D", ""));
-        f.setIe(txtIe.getText().replaceAll("\\D", ""));
+        f.setIe(txtIe.getText());
         f.setContato(txtContato.getText());
 
         // TELEFONE: SOMENTE NÚMEROS (VARCHAR 11)
@@ -423,7 +383,7 @@ private String somenteNumeros(String s) { return s == null ? "" : s.replaceAll("
     //===
     private BigDecimal parseBig(String v) {
         try {
-            return new BigDecimal(v.trim().replace(",", "."));
+            return new BigDecimal(v.replaceAll("[^0-9,]", "").replace(",", "."));
         } catch (Exception e) {
             return BigDecimal.ZERO;
         }

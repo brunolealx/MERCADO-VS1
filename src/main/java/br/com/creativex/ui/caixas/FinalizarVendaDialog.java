@@ -6,14 +6,16 @@
 package br.com.creativex.ui.caixas;
 
 import javax.swing.*;
+import javax.swing.text.NumberFormatter;
 import java.awt.*;
 import java.math.BigDecimal;
+import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
 public class FinalizarVendaDialog extends JDialog {
 
     private JComboBox<String> cbPagamento;
-    private JTextField txtValorPago;
+    private JFormattedTextField txtValorPago;
     private JLabel lblTotal, lblTroco;
 
     private JButton btnConfirmar, btnCancelar, btnVoltarAoCarrinho;
@@ -51,7 +53,8 @@ public class FinalizarVendaDialog extends JDialog {
         cbPagamento.setFont(new Font("Arial", Font.PLAIN, 16));
 
         // VALOR PAGO
-        txtValorPago = new JTextField();
+        txtValorPago = new JFormattedTextField(criarFormatterDecimal());
+        txtValorPago.setValue(BigDecimal.ZERO);
         txtValorPago.setFont(new Font("Arial", Font.BOLD, 18));
 
         // TROCO
@@ -102,12 +105,8 @@ public class FinalizarVendaDialog extends JDialog {
     // =========================
     private void calcularTroco() {
         try {
-            String texto = txtValorPago.getText()
-                    .replace("R$", "")
-                    .replace(".", "")
-                    .replace(",", ".");
-
-            valorPago = new BigDecimal(texto);
+            valorPago = (BigDecimal) txtValorPago.getValue();
+            if (valorPago == null) valorPago = BigDecimal.ZERO;
 
             if (valorPago.compareTo(totalVenda) >= 0) {
                 troco = valorPago.subtract(totalVenda);
@@ -125,22 +124,11 @@ public class FinalizarVendaDialog extends JDialog {
 
     private void confirmarVenda() {
         try {
-            String texto = txtValorPago.getText()
-                    .replace("R$", "")
-                    .replace(".", "")
-                    .replace(",", ".")
-                    .trim();
+            txtValorPago.commitEdit();
+        } catch (Exception e) { /* Ignora */ }
 
-            if (texto.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Informe o valor pago!");
-                return;
-            }
-
-            valorPago = new BigDecimal(texto);
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Valor pago inválido!");
-            return;
-        }
+        valorPago = (BigDecimal) txtValorPago.getValue();
+        if (valorPago == null) valorPago = BigDecimal.ZERO;
 
         if (valorPago.compareTo(totalVenda) < 0) {
             JOptionPane.showMessageDialog(
@@ -155,6 +143,16 @@ public class FinalizarVendaDialog extends JDialog {
         metodoSelecionado = (String) cbPagamento.getSelectedItem();
         vendaConfirmada = true;
         dispose();
+    }
+
+    private NumberFormatter criarFormatterDecimal() {
+        DecimalFormat df = new DecimalFormat("#,##0.00");
+        df.setParseBigDecimal(true);
+        NumberFormatter nf = new NumberFormatter(df);
+        nf.setValueClass(BigDecimal.class);
+        nf.setAllowsInvalid(false);
+        nf.setMinimum(BigDecimal.ZERO);
+        return nf;
     }
 
     // =========================

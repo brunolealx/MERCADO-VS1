@@ -38,7 +38,7 @@ public class JacobNumericField extends JTextField {
         this.limiteMaximo = (long) Math.pow(10, inteiros + decimais);
 
         // Estilização padrão de terminal corporativo
-        this.setFont(new Font("Monospaced", Font.BOLD, 18));
+        this.setFont(new Font("Monospaced", Font.BOLD, 14));
         this.setHorizontalAlignment(JTextField.RIGHT);
 
         // Intercepta as teclas de sinal (+ e -) antes que cheguem ao documento

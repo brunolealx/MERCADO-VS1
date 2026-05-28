@@ -17,6 +17,7 @@ import br.com.creativex.application.caixa.FinalizeVendaUseCase;
 import br.com.creativex.application.caixa.ListarVendasUseCase;
 import br.com.creativex.application.usuario.UsuarioUseCases;
 import br.com.creativex.presentation.controller.ClienteController;
+import br.com.creativex.presentation.controller.ClientepjController;
 import br.com.creativex.infrastructure.persistence.repository.produto.ProdutoDAO;
 import br.com.creativex.infrastructure.persistence.repository.produto.ProdutoRepositoryJdbcAdapter;
 import br.com.creativex.presentation.controller.CaixaController;
@@ -39,8 +40,8 @@ import br.com.creativex.application.config.ConsultarTributoProdutoUseCase;
  * alterações na estrutura de dependências.
  * 
  * @author Peracio Dias
- * @version 2.0
- * @since 2026-05-26
+ * @version 1.0
+ * @since 2026-02-01
  */
 public final class AppFactory {
 
@@ -52,7 +53,7 @@ public final class AppFactory {
     /**
      * Cria e retorna a instância do ClienteController com suas dependências.
      * 
-     * @return ClienteController configurado com DAO e Repository unificado
+     * @return ClienteController configurado com DAO e Repository
      */
     public static ClienteController clienteController() {
         ClienteDAO dao = new ClienteDAO();
@@ -91,6 +92,17 @@ public final class AppFactory {
         } catch (Exception e) {
             throw new RuntimeException("Erro ao criar ProdutoController", e);
         }
+    }
+
+    /**
+     * Cria e retorna a instância do ClientepjController com suas dependências.
+     * 
+     * @return ClientepjController configurado com DAO e Repository
+     */
+    public static ClientepjController clientepjController() {
+        br.com.creativex.infrastructure.persistence.repository.clientepj.ClientepjDAO dao = new br.com.creativex.infrastructure.persistence.repository.clientepj.ClientepjDAO();
+        br.com.creativex.infrastructure.persistence.repository.clientepj.ClientepjRepositoryJdbcAdapter repo = new br.com.creativex.infrastructure.persistence.repository.clientepj.ClientepjRepositoryJdbcAdapter(dao);
+        return new ClientepjController(repo);
     }
 
     /**
