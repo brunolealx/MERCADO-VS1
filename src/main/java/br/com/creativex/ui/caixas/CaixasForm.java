@@ -16,6 +16,8 @@ import br.com.creativex.presentation.controller.ProdutoController;
 import br.com.creativex.application.config.ConsultarTributoProdutoUseCase;
 import br.com.creativex.ui.HomeScreen;
 import br.com.creativex.ui.MainWindow;
+import br.com.creativex.ui.components.JacobNumericField;
+import br.com.creativex.ui.components.JacobTextField;
 
 import javax.swing.*;
 import java.awt.*;
@@ -28,7 +30,9 @@ public class CaixasForm extends JPanel {
     private JPanel painelItemAtual;
     private JLabel lblItemAtual;
 //<-
-    private JTextField txtCodigoBarras, txtQuantidade, txtTotalVenda;
+    private JacobTextField txtCodigoBarras;
+    private JacobNumericField txtQuantidade;
+    private JTextField txtTotalVenda;
     private JTextArea areaCupom;
     private JButton btnFinalizar, btnRemoverItem, btnVoltar;
 
@@ -59,10 +63,11 @@ public class CaixasForm extends JPanel {
 
     private void initComponents() {
         // CAMPOS DE ENTRADA
-        txtCodigoBarras = new JTextField();
+        txtCodigoBarras = JacobTextField.criarPorPicture("X(20)");
         txtCodigoBarras.setFont(new Font("SansSerif", Font.BOLD, 18));
 
-        txtQuantidade = new JTextField("1");
+        txtQuantidade = JacobNumericField.criarPorPicture("9(4)V999");
+        txtQuantidade.setValue(new BigDecimal("1.000"));
         txtQuantidade.setFont(new Font("SansSerif", Font.BOLD, 18));
 
         JPanel pnlTopo = new JPanel(new BorderLayout());
@@ -357,7 +362,7 @@ public class CaixasForm extends JPanel {
         BigDecimal qtd;
 
         try {
-            qtd = new BigDecimal(txtQuantidade.getText().replace(",", "."));
+            qtd = txtQuantidade.getBigDecimalValue();
             if (qtd.compareTo(BigDecimal.ZERO) <= 0) {
                 JOptionPane.showMessageDialog(this, "Quantidade deve ser maior que zero!");
                 return;
@@ -366,6 +371,7 @@ public class CaixasForm extends JPanel {
             JOptionPane.showMessageDialog(this, "Quantidade inválida!");
             return;
         }
+
 
         try {
             if (p.getQuantidadeEstoque().compareTo(qtd) < 0) {

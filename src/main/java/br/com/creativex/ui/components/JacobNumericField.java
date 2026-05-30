@@ -62,6 +62,17 @@ public class JacobNumericField extends JTextField {
         // Aplica o filtro atômico de inserção de dados
         PlainDocument doc = (PlainDocument) this.getDocument();
         doc.setDocumentFilter(new CalculadoraFilter());
+
+        // Comportamento de terminal: seleciona tudo ao ganhar foco e move cursor para o fim
+        this.addFocusListener(new java.awt.event.FocusAdapter() {
+            @Override
+            public void focusGained(java.awt.event.FocusEvent evt) {
+                SwingUtilities.invokeLater(() -> {
+                    selectAll();
+                    setCaretPosition(getText().length());
+                });
+            }
+        });
         
         atualizarTelaViaCodigo();
     }
@@ -263,6 +274,8 @@ public class JacobNumericField extends JTextField {
 
             if (fb != null) {
                 super.replace(fb, 0, fb.getDocument().getLength(), textoFormatado, null);
+                // Força o cursor para o final após a substituição
+                JacobNumericField.this.setCaretPosition(textoFormatado.length());
             } else {
                 SwingUtilities.invokeLater(() -> {
                     try {
@@ -271,6 +284,7 @@ public class JacobNumericField extends JTextField {
                         d.setDocumentFilter(null);
                         JacobNumericField.this.setText(textoFormatado);
                         d.setDocumentFilter(original);
+                        JacobNumericField.this.setCaretPosition(textoFormatado.length());
                     } catch (Exception ignored) {}
                 });
             }

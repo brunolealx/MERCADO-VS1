@@ -1,4 +1,3 @@
-
 -- =============================================================================
 -- SCRIPT CONSOLIDADO ERP-PDVex-vs1 (VERSÃO INTEGRAL E REFINADA)
 -- Data: 08/05/2026
@@ -6,15 +5,14 @@
 
 -- CRIA O BANCO DE DADOS PADRÃO PARA CARACTERES E ACENTUAÇÃO BRASILEIROS
 -- Execute manualmente apenas se o banco ainda não existir.
--- CREATE DATABASE bco_dados_mercado
--- WITH ENCODING 'UTF8'
--- LC_COLLATE = 'pt_BR.UTF-8'
--- LC_CTYPE = 'pt_BR.UTF-8';
-
+--CREATE DATABASE bco_dados_mercado 
+--WITH ENCODING 'UTF8' 
+--    LC_COLLATE = 'pt_BR.UTF-8' 
+--    LC_CTYPE = 'pt_BR.UTF-8' 
+--    TEMPLATE = template0;
 --------------------------------------------------------------------------------
 -- 1. TABELAS SEM DEPENDÊNCIAS (TABELAS PAI)
 --------------------------------------------------------------------------------
-
 
 -- Configuração da Empresa/Estabelecimento
 CREATE TABLE IF NOT EXISTS public.tabela_estabelecimento (
@@ -28,17 +26,11 @@ CREATE TABLE IF NOT EXISTS public.tabela_estabelecimento (
     bairro VARCHAR(100),
     cidade VARCHAR(100),
     estado CHAR(2),
-    cep VARCHAR(8),
+    cep VARCHAR(9),
     codigo_municipio_ibge VARCHAR(7),
     regime_tributario INTEGER DEFAULT 1,
     aliq_ibpt NUMERIC(5,2) DEFAULT 13.45
 );
-
-ALTER TABLE public.tabela_estabelecimento
-    ADD COLUMN IF NOT EXISTS cep VARCHAR(8);
-
-ALTER TABLE public.tabela_estabelecimento
-    ADD COLUMN IF NOT EXISTS codigo_municipio_ibge VARCHAR(7);
 
 -- Gestão de Usuários e Acesso
 CREATE TABLE IF NOT EXISTS public.tabela_usuarios (
@@ -54,7 +46,7 @@ CREATE TABLE IF NOT EXISTS public.tabela_usuarios (
 CREATE TABLE IF NOT EXISTS public.tabela_clientes (
     id BIGSERIAL PRIMARY KEY,
     nome VARCHAR(100) NOT NULL,
-    cpf VARCHAR(11) NOT NULL UNIQUE,
+    cpf VARCHAR(14) NOT NULL UNIQUE,
     rg VARCHAR(20),
     telefone VARCHAR(15),
     email VARCHAR(100),
@@ -63,8 +55,8 @@ CREATE TABLE IF NOT EXISTS public.tabela_clientes (
     bairro VARCHAR(50),
     cidade VARCHAR(50) NOT NULL,
     uf CHAR(2),
-    cep VARCHAR(8),
-    limite_credito NUMERIC(10,2) DEFAULT 0.00,
+    cep VARCHAR(9),
+    limite_credito NUMERIC(12,2) DEFAULT 0.00,
     data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -73,9 +65,9 @@ CREATE TABLE IF NOT EXISTS public.tabela_clientes_pj (
     id BIGSERIAL PRIMARY KEY,
     razao_social VARCHAR(150) NOT NULL,
     nome_fantasia VARCHAR(150),
-    cnpj VARCHAR(14) NOT NULL UNIQUE,
+    cnpj VARCHAR(18) NOT NULL UNIQUE,
     ie VARCHAR(30),
-    telefone VARCHAR(11),
+    telefone VARCHAR(15),
     email VARCHAR(150),
     endereco VARCHAR(150),
     numero VARCHAR(20),
@@ -83,7 +75,7 @@ CREATE TABLE IF NOT EXISTS public.tabela_clientes_pj (
     bairro VARCHAR(100),
     cidade VARCHAR(100) NOT NULL,
     uf CHAR(2),
-    cep VARCHAR(8),
+    cep VARCHAR(9),
     limite_credito NUMERIC(12,2) DEFAULT 0.00,
     data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -93,10 +85,10 @@ CREATE TABLE IF NOT EXISTS public.tabela_fornecedores (
     id BIGSERIAL PRIMARY KEY,
     razao_social VARCHAR(150) NOT NULL,
     nome_fantasia VARCHAR(150),
-    cnpj VARCHAR(14) NOT NULL UNIQUE,
+    cnpj VARCHAR(18) NOT NULL UNIQUE,
     ie VARCHAR(30),
     contato VARCHAR(120) NOT NULL,
-    telefone VARCHAR(11),
+    telefone VARCHAR(15),
     email VARCHAR(150),
     endereco VARCHAR(150),
     numero VARCHAR(20),
@@ -104,12 +96,12 @@ CREATE TABLE IF NOT EXISTS public.tabela_fornecedores (
     bairro VARCHAR(100),
     cidade VARCHAR(100) NOT NULL,
     uf CHAR(2),
-    cep VARCHAR(8),
+    cep VARCHAR(9),
     limite_credito NUMERIC(12,2) DEFAULT 0.00,
     data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Tabela de Configuração Tributária (Com a restrição UNIQUE integrada)
+-- Tabela de Configuração Tributária
 CREATE TABLE IF NOT EXISTS public.config_tributaria (
     id SERIAL PRIMARY KEY,
     cst_icms VARCHAR(3) NOT NULL,
@@ -117,8 +109,17 @@ CREATE TABLE IF NOT EXISTS public.config_tributaria (
     CONSTRAINT cst_unico UNIQUE (cst_icms)
 );
 
+-- Popula AUTOMATICAMENTE todos os 1086 códigos possíveis de CST (1, 2 e 3 dígitos)
+INSERT INTO public.config_tributaria (cst_icms, aliquota_estimada)
+SELECT TO_CHAR(gerador, 'FM000'), 0.00 FROM generate_series(0, 999) AS gerador
+UNION
+SELECT TO_CHAR(gerador, 'FM00'), 0.00 FROM generate_series(0, 9) AS gerador
+UNION
+SELECT TO_CHAR(gerador, 'FM0'), 0.00 FROM generate_series(0, 9) AS gerador
+ON CONFLICT (cst_icms) DO NOTHING;
+
 --------------------------------------------------------------------------------
--- 2. TABELAS COM DEPENDÊNCIAS
+-- 2. TABELAS COM DEPENDÊNCIAS (TABELAS FILHAS)
 --------------------------------------------------------------------------------
 
 -- Cadastro de Produtos
@@ -142,7 +143,7 @@ CREATE TABLE IF NOT EXISTS public.tabela_produtos (
     cfop_padrao VARCHAR(4),
     unidade_tributavel VARCHAR(10),
     cean_tributavel VARCHAR(20),
-    cst_icms VARCHAR(3),
+    cst_icms VARCHAR(3) REFERENCES public.config_tributaria(cst_icms), 
     aliquota_icms NUMERIC(5,2) DEFAULT 0.00,
     cst_pis VARCHAR(2),
     ppis NUMERIC(5,2) DEFAULT 0.00,
@@ -181,7 +182,7 @@ CREATE TABLE IF NOT EXISTS public.tabela_vendas (
     CONSTRAINT chk_valores_venda CHECK (total_bruto >= 0 AND total_liquido >= 0)
 );
 
--- Itens da Venda (Mantendo todos os campos fiscais de momento)
+-- Itens da Venda
 CREATE TABLE IF NOT EXISTS public.tabela_itens_venda (
     id_item BIGSERIAL PRIMARY KEY,
     id_venda BIGINT NOT NULL REFERENCES public.tabela_vendas(id_venda) ON DELETE CASCADE,
@@ -202,104 +203,64 @@ CREATE TABLE IF NOT EXISTS public.tabela_itens_venda (
     cofins_valor_momento NUMERIC(10,2) DEFAULT 0.00
 );
 
+-- Documentos Fiscais
 CREATE TABLE IF NOT EXISTS public.tabela_documentos_fiscais (
-	id_documento BIGSERIAL PRIMARY KEY,
-	id_venda BIGINT NOT NULL REFERENCES public.tabela_vendas(id_venda) ON DELETE CASCADE,
-	modelo VARCHAR(10) NOT NULL DEFAULT 'NFCE',
-	status VARCHAR(30) NOT NULL DEFAULT 'PENDENTE_EMISSAO',
-	ambiente VARCHAR(20) NOT NULL DEFAULT 'HOMOLOGACAO',
-	modo_emissao VARCHAR(30) NOT NULL DEFAULT 'NORMAL',
-	serie INTEGER,
-	numero BIGINT,
-	chave_acesso VARCHAR(44),
-	protocolo_autorizacao VARCHAR(50),
-	xml_gerado TEXT,
-	xml_assinado TEXT,
-	xml_autorizado TEXT,
-	motivo_rejeicao TEXT,
-	data_emissao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-	data_autorizacao TIMESTAMP,
-	data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-	data_atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    id_documento BIGSERIAL PRIMARY KEY,
+    id_venda BIGINT NOT NULL REFERENCES public.tabela_vendas(id_venda) ON DELETE CASCADE,
+    modelo VARCHAR(10) NOT NULL DEFAULT 'NFCE',
+    status VARCHAR(30) NOT NULL DEFAULT 'PENDENTE_EMISSAO',
+    ambiente VARCHAR(20) NOT NULL DEFAULT 'HOMOLOGACAO',
+    modo_emissao VARCHAR(30) NOT NULL DEFAULT 'NORMAL',
+    serie INTEGER,
+    numero BIGINT,
+    chave_acesso VARCHAR(44),
+    protocolo_autorizacao VARCHAR(50),
+    xml_gerado TEXT,
+    xml_assinado TEXT,
+    xml_autorizado TEXT,
+    motivo_rejeicao TEXT,
+    data_emissao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    data_autorizacao TIMESTAMP,
+    data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    data_atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT uk_documento_fiscal_venda_modelo UNIQUE (id_venda, modelo)
-
 );
 
-ALTER TABLE public.tabela_documentos_fiscais
-    ADD COLUMN IF NOT EXISTS xml_gerado TEXT;
+--------------------------------------------------------------------------------
+-- 3. OBJETOS RESTAURADOS DE PRODUÇÃO (MOVIMENTAÇÕES E VIEWS)
+--------------------------------------------------------------------------------
 
-ALTER TABLE public.tabela_documentos_fiscais
-    ADD COLUMN IF NOT EXISTS data_autorizacao TIMESTAMP;
+-- Tabela de Movimentações de Caixa
+CREATE TABLE IF NOT EXISTS public.tabela_movimentacoes_caixa (
+    id BIGSERIAL PRIMARY KEY,
+    tipo VARCHAR(20) NOT NULL,
+    valor NUMERIC(10,2) NOT NULL,
+    motivo VARCHAR(255),
+    id_usuario BIGINT REFERENCES public.tabela_usuarios(id),
+    data_movimentacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
--- Compatibilidade para bancos criados por versões anteriores do sistema.
--- CREATE TABLE IF NOT EXISTS não altera uma tabela que já existe.
-ALTER TABLE public.tabela_itens_venda
-    ADD COLUMN IF NOT EXISTS icms_aliquota_momento NUMERIC(5,2) DEFAULT 0.00;
-
-ALTER TABLE public.tabela_itens_venda
-    ADD COLUMN IF NOT EXISTS icms_valor_momento NUMERIC(10,2) DEFAULT 0.00;
-
-ALTER TABLE public.tabela_itens_venda
-    ADD COLUMN IF NOT EXISTS cst_pis_momento VARCHAR(2);
-
-ALTER TABLE public.tabela_itens_venda
-    ADD COLUMN IF NOT EXISTS pis_aliquota_momento NUMERIC(5,2) DEFAULT 0.00;
-
-ALTER TABLE public.tabela_itens_venda
-    ADD COLUMN IF NOT EXISTS pis_valor_momento NUMERIC(10,2) DEFAULT 0.00;
-
-ALTER TABLE public.tabela_itens_venda
-    ADD COLUMN IF NOT EXISTS cst_cofins_momento VARCHAR(2);
-
-ALTER TABLE public.tabela_itens_venda
-    ADD COLUMN IF NOT EXISTS cofins_aliquota_momento NUMERIC(5,2) DEFAULT 0.00;
-
-ALTER TABLE public.tabela_itens_venda
-    ADD COLUMN IF NOT EXISTS cofins_valor_momento NUMERIC(10,2) DEFAULT 0.00;
-
--- Movimentações de Estoque (Mantendo saldos anterior/posterior)
+-- 1. Cria a Tabela de Movimentações de Estoque com as referências corrigidas
 CREATE TABLE IF NOT EXISTS public.tabela_movimentacoes_estoque (
     id BIGSERIAL PRIMARY KEY,
-    id_produto BIGINT NOT NULL REFERENCES public.tabela_produtos(id),
+    id_produto BIGINT NOT NULL REFERENCES public.tabela_produtos(id), -- Corrigido para tabela_produtos
     tipo VARCHAR(20) NOT NULL,
     quantidade NUMERIC(10,3) NOT NULL,
     saldo_anterior NUMERIC(10,3),
     saldo_posterior NUMERIC(10,3),
     motivo VARCHAR(255),
-    id_usuario BIGINT REFERENCES public.tabela_usuarios(id),
-    id_venda_origem BIGINT REFERENCES public.tabela_vendas(id_venda),
+    id_usuario BIGINT REFERENCES public.tabela_usuarios(id), -- Corrigido para tabela_usuarios
+    id_venda_origem BIGINT,
     data_movimentacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
---------------------------------------------------------------------------------
--- 3. ÍNDICES (UNIFICAÇÃO DAS DUAS VERSÕES)
---------------------------------------------------------------------------------
-
--- Fornecedores
-CREATE INDEX IF NOT EXISTS idx_fornecedor_razao ON public.tabela_fornecedores (razao_social);
-CREATE INDEX IF NOT EXISTS idx_fornecedor_cidade ON public.tabela_fornecedores (cidade);
-CREATE INDEX IF NOT EXISTS idx_fornecedor_contato ON public.tabela_fornecedores (contato);
-
--- Produtos e Estoque
-CREATE INDEX IF NOT EXISTS idx_produto_cod_barra ON public.tabela_produtos (codigo_barra);
+-- 2. Recria os Índices de Otimização de Busca para o PDV
 CREATE INDEX IF NOT EXISTS idx_movimentacao_produto ON public.tabela_movimentacoes_estoque (id_produto);
 CREATE INDEX IF NOT EXISTS idx_movimentacao_venda ON public.tabela_movimentacoes_estoque (id_venda_origem);
 
--- Vendas e Itens (PDV)
-CREATE INDEX IF NOT EXISTS idx_vendas_data ON public.tabela_vendas (data_venda);
-CREATE INDEX IF NOT EXISTS idx_itens_venda_id_venda ON public.tabela_itens_venda (id_venda);
-
---------------------------------------------------------------------------------
--- 4. VIEWS E DADOS INICIAIS
---------------------------------------------------------------------------------
-
-INSERT INTO public.config_tributaria (cst_icms, aliquota_estimada) 
-VALUES ('000', 17.00), ('020', 12.00), ('040', 0.00)
-ON CONFLICT (cst_icms) DO NOTHING;
-
+-- View de Bipagem Rápida do PDV (Chamada pelo Java)
 CREATE OR REPLACE VIEW public.vw_pdv_bipagem AS
-SELECT 
-    p.id,
+ SELECT p.id,
     p.codigo_barra,
     p.descricao,
     p.marca,
@@ -308,8 +269,13 @@ SELECT
     p.cst_icms,
     p.preco_custo,
     COALESCE(t.aliquota_estimada, 13.45) AS aliquota_aplicada,
-    ROUND(p.preco_venda * COALESCE(t.aliquota_estimada, 13.45) / 100, 2) AS valor_imposto_item
-FROM 
-    public.tabela_produtos p
-LEFT JOIN 
-    public.config_tributaria t ON p.cst_icms = t.cst_icms;
+    round(p.preco_venda * COALESCE(t.aliquota_estimada, 13.45) / 100::numeric, 2) AS valor_imposto_item
+   FROM tabela_produtos p
+     LEFT JOIN config_tributaria t ON p.cst_icms::text = t.cst_icms::text;
+
+--------------------------------------------------------------------------------
+-- 4. USUÁRIO ADMINISTRADOR PADRÃO (ACESSO INICIAL DO JAVA)
+--------------------------------------------------------------------------------
+INSERT INTO public.tabela_usuarios (nome, login, senha, perfil, ativo)
+VALUES ('Administrador do Sistema', 'admin', 'admin123', 'ADMINISTRADOR', TRUE)
+ON CONFLICT (login) DO NOTHING;

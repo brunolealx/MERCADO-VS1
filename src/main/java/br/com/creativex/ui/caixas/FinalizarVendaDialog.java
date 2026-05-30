@@ -5,17 +5,16 @@
 //creativex sistemas
 package br.com.creativex.ui.caixas;
 
+import br.com.creativex.ui.components.JacobNumericField;
 import javax.swing.*;
-import javax.swing.text.NumberFormatter;
 import java.awt.*;
 import java.math.BigDecimal;
-import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
 public class FinalizarVendaDialog extends JDialog {
 
     private JComboBox<String> cbPagamento;
-    private JFormattedTextField txtValorPago;
+    private JacobNumericField txtValorPago;
     private JLabel lblTotal, lblTroco;
 
     private JButton btnConfirmar, btnCancelar, btnVoltarAoCarrinho;
@@ -53,7 +52,7 @@ public class FinalizarVendaDialog extends JDialog {
         cbPagamento.setFont(new Font("Arial", Font.PLAIN, 16));
 
         // VALOR PAGO
-        txtValorPago = new JFormattedTextField(criarFormatterDecimal());
+        txtValorPago = JacobNumericField.criarPorPicture("9(7)V99");
         txtValorPago.setValue(BigDecimal.ZERO);
         txtValorPago.setFont(new Font("Arial", Font.BOLD, 18));
 
@@ -105,7 +104,7 @@ public class FinalizarVendaDialog extends JDialog {
     // =========================
     private void calcularTroco() {
         try {
-            valorPago = (BigDecimal) txtValorPago.getValue();
+            valorPago = txtValorPago.getBigDecimalValue();
             if (valorPago == null) valorPago = BigDecimal.ZERO;
 
             if (valorPago.compareTo(totalVenda) >= 0) {
@@ -123,11 +122,7 @@ public class FinalizarVendaDialog extends JDialog {
     }
 
     private void confirmarVenda() {
-        try {
-            txtValorPago.commitEdit();
-        } catch (Exception e) { /* Ignora */ }
-
-        valorPago = (BigDecimal) txtValorPago.getValue();
+        valorPago = txtValorPago.getBigDecimalValue();
         if (valorPago == null) valorPago = BigDecimal.ZERO;
 
         if (valorPago.compareTo(totalVenda) < 0) {
@@ -143,16 +138,6 @@ public class FinalizarVendaDialog extends JDialog {
         metodoSelecionado = (String) cbPagamento.getSelectedItem();
         vendaConfirmada = true;
         dispose();
-    }
-
-    private NumberFormatter criarFormatterDecimal() {
-        DecimalFormat df = new DecimalFormat("#,##0.00");
-        df.setParseBigDecimal(true);
-        NumberFormatter nf = new NumberFormatter(df);
-        nf.setValueClass(BigDecimal.class);
-        nf.setAllowsInvalid(false);
-        nf.setMinimum(BigDecimal.ZERO);
-        return nf;
     }
 
     // =========================
